@@ -106,22 +106,22 @@ spec:
           resources:
             {{- toYaml .Values.puppetdb.resources | nindent 12 }}
           env:
-            - name: PUPPETSERVER_HOSTNAME
+            - name: OPENVOXSERVER_HOSTNAME
               value: {{ template "puppetserver.puppetserver-masters.serviceName" . }}
-            - name: PUPPETSERVER_PORT
+            - name: OPENVOXSERVER_PORT
               value: "{{ template "puppetserver.puppetserver-masters.port" . }}"
             - name: DNS_ALT_NAMES
               value: {{ template "puppetdb.san" . }}
-            {{- if not (hasKey .Values.puppetdb.extraEnv "PUPPETDB_POSTGRES_HOSTNAME") }}
-            - name: PUPPETDB_POSTGRES_HOSTNAME
+            {{- if not (hasKey .Values.puppetdb.extraEnv "OPENVOXDB_POSTGRES_HOSTNAME") }}
+            - name: OPENVOXDB_POSTGRES_HOSTNAME
               value: "{{ include "postgresql.hostname" . }}"
             {{- end }}
-            - name: PUPPETDB_PASSWORD
+            - name: OPENVOXDB_POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ template "puppetdb.secret" . }}
                   key: password
-            - name: PUPPETDB_USER
+            - name: OPENVOXDB_POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: {{ template "puppetdb.secret" . }}
@@ -180,9 +180,9 @@ spec:
             - name: PUPPETDB_SSL_VERIFY
               value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/ca.pem"
             - name: PUPPETDB_CERT
-              value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/puppetdb.pem"
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/openvoxdb.pem"
             - name: PUPPETDB_KEY
-              value: "/opt/puppetlabs/server/data/puppetdb/certs/private_keys/puppetdb.pem"
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/private_keys/openvoxdb.pem"
             - name: PUPPETBOARD_PORT
               value: {{ .Values.puppetboard.port | quote }}
             - name: SECRET_KEY
@@ -282,9 +282,9 @@ spec:
             - name: PUPPETDB_URL
               value: "https://{{ if .Values.singleCA.enabled}}{{.Values.singleCA.puppetdb.overrideHostname}}{{ else }}{{ ( include "puppetdb.fullname" . ) }}{{ end }}:8081/pdb/query"
             - name: PUPPETDB_CERT_FILE
-              value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/puppetdb.pem"
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/openvoxdb.pem"
             - name: PUPPETDB_KEY_FILE
-              value: "/opt/puppetlabs/server/data/puppetdb/certs/private_keys/puppetdb.pem"
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/private_keys/openvoxdb.pem"
             - name: PUPPETDB_CA_FILE
               value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/ca.pem"
             - name: PUPPETDB_SCRAPE_INTERVAL

@@ -239,7 +239,7 @@ spec:
           {{- end }}
           env:
             {{- if not .Values.global.runAsNonRoot }}
-            - name: PUPPETSERVER_HOSTNAME
+            - name: OPENVOXSERVER_HOSTNAME
               value: puppet
             # necessary to set certname and server in puppet.conf, required by
             # puppetserver ca cli application
@@ -248,12 +248,12 @@ spec:
               value: "false"
               # set the hostname to puppet to identify easily the certificate
             {{- end }}
-            - name: PUPPET_MASTERPORT
+            - name: OPENVOXSERVER_PORT
               value: "{{ template "puppetserver.puppetserver-masters.port" . }}"
             - name: DNS_ALT_NAMES
               value: "{{ template "puppetserver.master.san" . }}"
-            - name: PUPPETDB_SERVER_URLS
-              value: "https://{{ default ( include "puppetdb.fullname" . ) .Values.singleCA.puppetdb.overrideHostname }}:8081"
+            - name: OPENVOXDB_SERVER_URLS
+              value: https://{{ if .Values.singleCA.enabled}}{{.Values.singleCA.puppetdb.overrideHostname}}{{else }}{{ ( include "puppetdb.fullname" . ) }}{{end}}:8081
             - name: CA_ALLOW_SUBJECT_ALT_NAMES
               value: "true"
             {{- end }}

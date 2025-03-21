@@ -8,8 +8,8 @@ manifest should match snapshot:
         app.kubernetes.io/instance: puppetserver
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
-        app.kubernetes.io/version: 7.17.3
-        helm.sh/chart: puppetserver-9.6.0
+        app.kubernetes.io/version: 8.8.0
+        helm.sh/chart: puppetserver-10.0.0
       name: puppetserver-puppetserver-compiler
     spec:
       podManagementPolicy: OrderedReady
@@ -31,29 +31,29 @@ manifest should match snapshot:
             app.kubernetes.io/instance: puppetserver
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
-            app.kubernetes.io/version: 7.17.3
-            helm.sh/chart: puppetserver-9.6.0
+            app.kubernetes.io/version: 8.8.0
+            helm.sh/chart: puppetserver-10.0.0
         spec:
           containers:
             - env:
-                - name: PUPPETSERVER_HOSTNAME
+                - name: OPENVOXSERVER_HOSTNAME
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.name
-                - name: PUPPET_MASTERPORT
+                - name: OPENVOXSERVER_PORT
                   value: "8140"
                 - name: DNS_ALT_NAMES
                   value: puppetserver-puppetserver-compiler-0,puppetserver-puppet-compilers,
-                - name: PUPPETDB_SERVER_URLS
+                - name: OPENVOXDB_SERVER_URLS
                   value: https://puppetserver-puppetdb:8081
                 - name: CA_ENABLED
                   value: "false"
                 - name: CA_HOSTNAME
                   value: puppetserver-puppet
-                - name: CA_MASTERPORT
+                - name: CA_PORT
                   value: "8140"
               envFrom: null
-              image: ghcr.io/voxpupuli/puppetserver:7.17.3-main
+              image: ghcr.io/openvoxproject/openvoxserver:8.8.0-main
               imagePullPolicy: IfNotPresent
               livenessProbe:
                 failureThreshold: 3
@@ -112,7 +112,7 @@ manifest should match snapshot:
                 - -c
               env: null
               envFrom: null
-              image: ghcr.io/voxpupuli/puppetserver:7.17.3-main
+              image: ghcr.io/openvoxproject/openvoxserver:8.8.0-main
               imagePullPolicy: IfNotPresent
               name: perms-and-dirs
               resources:

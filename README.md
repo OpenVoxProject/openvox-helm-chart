@@ -1,38 +1,38 @@
-# HELM Chart for Puppet Server
+# HELM Chart for OpenVox Server
 
 ## Introduction
 
-This chart bootstraps Puppet Server and its components on a Kubernetes cluster using the Helm package manager.
+This chart bootstraps OpenVox Server and its components on a Kubernetes cluster using the Helm package manager.
 
 ## Prerequisites
 
 ### Code Repos
 
-* You must specify your Puppet Control Repo using `puppetserver.puppeturl` variable in the `values.yaml` file or include `--set puppetserver.puppeturl=<your_public_repo>` in the command line of `helm install`. You can specify your separate Hieradata Repo as well using the `hiera.hieradataurl` variable.
+* You must specify your OpenVox Control Repo using `puppetserver.puppeturl` variable in the `values.yaml` file or include `--set puppetserver.puppeturl=<your_public_repo>` in the command line of `helm install`. You can specify your separate Hieradata Repo as well using the `hiera.hieradataurl` variable.
 
 * You can also use private repos. Just remember to specify your credentials using `r10k.code.viaSsh.credentials.ssh.value` or `r10k.code.viaHttps.credentials.netrc.value`. You can set similar credentials for your Hieradata Repo.
 
-### Load-Balancing Puppet Server
+### Load-Balancing OpenVox Server
 
-In case a Load Balancer (LB) must sit in front of Puppet Server - please keep in mind that having a Network LB (operating at OSI Layer 4) is preferable.
+In case a Load Balancer (LB) must sit in front of OpenVox Server - please keep in mind that having a Network LB (operating at OSI Layer 4) is preferable.
 
 ### NGINX Ingress Controller Configuration
 
-The Ingress resource is disabled by default, but if it is enabled then ssl-passthrough must be used so that puppet agents will get the expected server certificate when connecting to the service.  This feature must be enabled on the Ingress resource itself, but also must be enabled via command line argument to the NGINX Ingress Controller.  More information on that can be found [here](<https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/>).
+The Ingress resource is disabled by default, but if it is enabled then ssl-passthrough must be used so that OpenVox agents will get the expected server certificate when connecting to the service.  This feature must be enabled on the Ingress resource itself, but also must be enabled via command line argument to the NGINX Ingress Controller.  More information on that can be found [here](<https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/>).
 
-> **NOTE**: Ingress URLs must be passed in the `Values.puppetserver.masters.fqdns.alternateServerNames`. Also - in the `Values.puppetserver.compilers.fqdns.alternateServerNames` (if Puppet Compilers and their Ingress resources are deployed).
+> **NOTE**: Ingress URLs must be passed in the `Values.puppetserver.masters.fqdns.alternateServerNames`. Also - in the `Values.puppetserver.compilers.fqdns.alternateServerNames` (if OpenVox Compilers and their Ingress resources are deployed).
 
 ## Migrating from Bare-Metal Puppet Infrastructure
 
 ### Auto-Signing Certificate Requests
 
-In general, the easiest way to switch the Puppet Agents from using one Puppet master to another is by enabling the auto-signing of CSRs. By default, that has been pre-enabled in the Puppet Server Docker container. It can be disabled in the Values file by passing an extra environment variable: `AUTOSIGN=false` (in `.Values.puppetserver.masters.extraEnv`).
+In general, the easiest way to switch the OpenVox Agents from using one OpenVox server to another is by enabling the auto-signing of CSRs. By default, that has been pre-enabled in the OpenVox Server Docker container. It can be disabled in the Values file by passing an extra environment variable: `AUTOSIGN=false` (in `.Values.puppetserver.masters.extraEnv`).
 
-You will also need to remove the existing certificates in `/etc/puppetlabs/puppet/ssl` on each Puppet agent.
+You will also need to remove the existing certificates in `/etc/puppetlabs/puppet/ssl` on each OpenVox agent.
 
-### Using Pre-Generated Puppet Master Certificates
+### Using Pre-Generated OpenVox Master Certificates
 
-If you prefer not to auto-sign or manually sign the Puppet Agents' CSRs - you can use the same Puppet master and PuppetDB certificates which you used in your bare-metal setup. Please archive into two separate files and place your certificates in the `init/puppet-certs/puppetserver` and `init/puppet-certs/puppetdb` directories and enable their usage in the Values file (`.Values.puppetserver.preGeneratedCertsJob.enabled`).
+If you prefer not to auto-sign or manually sign the OpenVox Agents' CSRs - you can use the same OpenVox master and OpenVoxDB certificates which you used in your bare-metal setup. Please archive into two separate files and place your certificates in the `init/puppet-certs/puppetserver` and `init/puppet-certs/puppetdb` directories and enable their usage in the Values file (`.Values.puppetserver.preGeneratedCertsJob.enabled`).
 
 > **NOTE**: For more information please check - [README.md](init/README.md). For more general knowledge on the matter you can also read the article - <https://puppet.com/docs/puppet/5.5/ssl_regenerate_certificates.html.>
 
@@ -41,29 +41,29 @@ If you prefer not to auto-sign or manually sign the Puppet Agents' CSRs - you ca
 If you prefer, you can use a single externally issued CA - <https://puppet.com/docs/puppet/7/config_ssl_external_ca.html>.
 Enable it with `.Values.singleCA.enabled`, add the crl.pem url with `.Values.singleCA.crl.url`.
 
-Generate puppet & puppetdb secret (must be name `puppet.pem` & `puppetdb.pem`):
+Generate OpenVox & OpenVoxdb secret (must be name `puppet.pem` & `puppetdb.pem`):
 ```
 kubectl create secret generic puppet-certificate --from-file=puppet.pem --from-file=puppet.key --from-file=ca.pem
 kubectl create secret generic puppetdb-certificate --from-file=puppetdb.pem --from-file=puppetdb.key --from-file=ca.pem
 ```
 finally set `.Values.singleCA.certificates.existingSecret.puppetserver` and `.Values.singleCA.certificates.existingSecret.puppetdb`.
 
-Additionnaly, if you use a public certificate authority, you can't use private SAN name, so you have to override puppetdb name with `.Values.singleCA.puppetdb.overrideHostname` (with the full name ie: puppetdb.my.domain)
+Additionnaly, if you use a public certificate authority, you can't use private SAN name, so you have to override puppetdb name with `.Values.singleCA.puppetdb.overrideHostname` (with the full name ie: openvoxdb.my.domain)
 
 If you prefer, you can use crl update as cronjob instead of sidecar, it reduce resources utilization because only 1 pod is running.
 :warning: it may not work on multi zone cluster. that why it's not enable by default
 
 ## Horizontal Scaling
 
-To achieve better availability and higher throughput of Puppet Infrastructure, you'll need to scale out Puppet Masters and/or Puppet Compilers.
+To achieve better availability and higher throughput of OpenVox Infrastructure, you'll need to scale out OpenVox Masters and/or OpenVox Compilers.
 
-### Multiple Puppet Masters
+### Multiple OpenVox Masters
 
-To achieve better availability of Puppet Infrastructure, you can scale out Puppet Server Masters using `.Values.puppetserver.masters.multiMasters`. These Servers are known as masters, and are responsible for the creation and signing of your Puppet Agents' certificates. They are also responsible for receiving catalog requests from agents and synchronize the results with each other.
+To achieve better availability of OpenVox Infrastructure, you can scale out OpenVox Server Masters using `.Values.puppetserver.masters.multiMasters`. These Servers are known as masters, and are responsible for the creation and signing of your OpenVox Agents' certificates. They are also responsible for receiving catalog requests from agents and synchronize the results with each other.
 
-### Multiple Puppet Compilers
+### Multiple OpenVox Compilers
 
-To achieve better throughput of Puppet Infrastructure, you can enable and scale out Puppet Server Compilers using `.Values.puppetserver.compilers`. These Servers are known as compile masters, and are simply additional load-balanced Puppet Servers that receive catalog requests from agents and synchronize the results with each other.
+To achieve better throughput of OpenVox Infrastructure, you can enable and scale out OpenVox Server Compilers using `.Values.puppetserver.compilers`. These Servers are known as compile masters, and are simply additional load-balanced OpenVox Servers that receive catalog requests from agents and synchronize the results with each other.
 
 ### Multiple PostgreSQL Read Replicas
 
@@ -88,13 +88,13 @@ r10k:
   asSidecar: false
 ```
 
-## Deploy Puppetserver deployment (master & compilers) as non root
-:warning: for now only puppetserver can run as non root, it's not available for the puppetdb
+## Deploy OpenVox deployment (master & compilers) as non root
+:warning: for now only openvox-server can run as non root, it's not available for the openvoxdb
 It will run a pre-install job to configure all repository & permissions for masters & compilers
 
 Benefits:
-- running puppetserver with limited permissions
-- improve puppetserver deployment (because certificate are not regenerated each time)
+- running OpenVox-server with limited permissions
+- improve OpenVox-server deployment (because certificate are not regenerated each time)
 
 You can enable it using:
 ```
@@ -147,27 +147,27 @@ masters:
 
 ## Chart Components
 
-* Creates three deployments: Puppet Server Master/s, and PuppetDB.
-* Creates three statefulsets (optional): Puppet Server Compiler/s, PostgreSQL Master, and PostgreSQL Read Replicas.
-* Creates seven services that expose: Puppet Server Masters, Puppet Server Compilers (optional), PuppetDB, PostgreSQL, and Puppetboard (optional).
-* Creates secrets to hold credentials for PuppetDB, PosgreSQL, and r10k.
+* Creates three deployments: OpenVox Server Master/s, and OpenVoxDB.
+* Creates three statefulsets (optional): OpenVox Server Compiler/s, PostgreSQL Master, and PostgreSQL Read Replicas.
+* Creates seven services that expose: OpenVox Server Masters, OpenVox Server Compilers (optional), OpenVoxDB, PostgreSQL, and Puppetboard (optional).
+* Creates secrets to hold credentials for OpenVoxDB, PosgreSQL, and r10k.
 
 ## Installing the Chart
 
 ### Add Puppet Server Helm Repository
 
-Before installing Puppet Server Helm chart, you need to add the [Puppet Server Helm repository](https://puppetlabs.github.io/puppetserver-helm-chart) to your Helm client as below.
+Before installing OpenVox Server Helm chart, you need to add the [OpenVox Server Helm repository](https://openvoxproject.github.io/openvox-helm-chart) to your Helm client as below.
 
 ```bash
-helm repo add puppet https://puppetlabs.github.io/puppetserver-helm-chart
+helm repo add openvox https://openvoxproject.github.io/openvox-helm-chart
 ```
 
 ### Install the Chart
 
-To install the chart with the release name `puppetserver`.
+To install the chart with the release name `openvoxserver`.
 
 ```bash
-helm install --namespace puppetserver --name puppetserver puppet/puppetserver --set puppetserver.puppeturl='https://github.com/$SOMEUSER/control-repo.git'
+helm install --namespace openvoxserver --name openvoxserver openvox/puppetserver --set puppetserver.puppeturl='https://github.com/$SOMEUSER/control-repo.git'
 ```
 
 > Note - If you do not specify a name, helm will select a name for you.
@@ -220,19 +220,9 @@ horizontalpodautoscaler.autoscaling/puppetserver-compilers-autoscaler   Stateful
 
 Added support for setting the size and Storage Class of individual Persistent Volume Claims fullfilling most uses of `customPersistentVolumeClaim` check `puppetdb.persistence.size` `puppetdb.persistence.storageClass`, `puppetserver.persistence.*.storageClass` and `puppetserver.persistence.*.size` for more information.
 
-### Puppet Version from 7.x to 8.x
+### from Chart Versions before 10.0
 
-for upgrading to Puppet 8, you only need to set the relevant tags for puppetserver and puppetdb to an appropriate version tag e.g.
-
-```
-puppetserver:
-  tag: 8.7.0-latest
-puppetdb:
-  tag: 8.8.1-latest
-```
-no other additional configuration should be needed.
-
-It is important to make sure that you update both tags as different major versions of the product are not compatible with each other.
+from 10.0 the default version of OpenVox Server is now 8.x - no changes should be needed but extra care should be taken to manage any specific issues with upgrading the major version of OpenVox Server
 
 ## Configuration
 
@@ -261,8 +251,8 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `global.extraEnv.*`| add extra environment variables to all containers |``|
 | `global.extraEnvSecret`| add extra environment variables to all containers from pre-existing secret |``|
 | `puppetserver.name` | puppetserver component label | `puppetserver`|
-| `puppetserver.image` | puppetserver image | `ghcr.io/voxpupuli/puppetserver`|
-| `puppetserver.tag` | puppetserver img tag | `7.17.3-main`|
+| `puppetserver.image` | puppetserver image | `ghcr.io/openvoxproject/openvoxserver`|
+| `puppetserver.tag` | puppetserver img tag | `8.8.0-main`|
 | `puppetserver.pullPolicy` | puppetserver img pull policy | `IfNotPresent`|
 | `puppetserver.persistence.data.enabled`| Persists /opt/puppetlabs/server/data/puppetserver/ in a PVC |`true`|
 | `puppetserver.persistence.data.existingClaim`| If non-empty, use a pre-defined PVC for puppet data |``|
@@ -468,8 +458,8 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `postgresql.networkPolicy.enabled` | enable `networkPolicy` on  postgresql | `true`|
 | `puppetdb.enabled` | puppetdb component enabled |`true`|
 | `puppetdb.name` | puppetdb component label | `puppetdb`|
-| `puppetdb.image` | puppetdb img | `ghcr.io/voxpupuli/puppetdb`|
-| `puppetdb.tag` | puppetdb img tag | `7.20.0-main`|
+| `puppetdb.image` | puppetdb img | `ghcr.io/openvoxproject/openvoxdb`|
+| `puppetdb.tag` | puppetdb img tag | `8.9.0-main`|
 | `puppetdb.pullPolicy` | puppetdb img pull policy | `IfNotPresent`|
 | `puppetdb.resources` | puppetdb resource limits |``|
 | `puppetdb.extraEnv` | puppetdb additional container env vars |``|
@@ -569,13 +559,13 @@ The following table lists the configurable parameters of the Puppetserver chart 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-helm install --namespace puppetserver --name puppetserver puppet/puppetserver --set puppetserver.puppeturl='https://github.com/$SOMEUSER/puppet.git',hiera.hieradataurl='https://github.com/$SOMEUSER/hieradata.git'
+helm install --namespace openvoxserver --name openvoxserver openvox/puppetserver --set puppetserver.puppeturl='https://github.com/$SOMEUSER/puppet.git',hiera.hieradataurl='https://github.com/$SOMEUSER/hieradata.git'
 ```
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```bash
-helm install --namespace puppetserver --name puppetserver puppet/puppetserver -f values.yaml
+helm install --namespace openvoxserver --name openvoxserver openvox/puppetserver -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
@@ -593,8 +583,8 @@ helm unittest . -u
 ## Testing the Deployed Chart Resources
 
 ```bash
-kubectl port-forward -n puppetserver svc/agents-to-puppet 8140:8140 &
-kubectl port-forward -n puppetserver svc/puppet-compilers 8141:8140 &
+kubectl port-forward -n openvoxserver svc/agents-to-puppet 8140:8140 &
+kubectl port-forward -n openvoxserver svc/puppet-compilers 8141:8140 &
 
 TIME_NOW="$(date +"%Y%m%dT%H%M")"
 cp "/etc/hosts"{,.backup_"$TIME_NOW"}

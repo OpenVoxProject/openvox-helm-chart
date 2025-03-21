@@ -713,7 +713,7 @@ If release name contains chart name it will be used as a full name.
 Define puppetdb alternate SAN
 */}}
 {{- define "puppetdb.san" -}}
-{{- $san := printf "puppetdb,%s" ( include "puppetdb.fullname" . ) -}}
+{{- $san := printf "openvoxdb,puppetdb,%s" ( include "puppetdb.fullname" . ) -}}
 {{- if .Values.puppetdb.fqdns.alternateServerNames -}}
 {{- $san = print $san "," .Values.puppetdb.fqdns.alternateServerNames -}}
 {{- end -}}
@@ -737,8 +737,8 @@ Return PostgreSQL host name
 {{- else }}
 {{- printf "%s-%s" .Release.Name "postgresql-primary-hl" | trimSuffix "-" -}}
 {{- end -}}
-{{- else if .Values.puppetdb.extraEnv.PUPPETDB_POSTGRES_HOSTNAME }}
-{{- printf "%s" .Values.puppetdb.extraEnv.PUPPETDB_POSTGRES_HOSTNAME -}}
+{{- else if .Values.puppetdb.extraEnv.OPENVOXDB_POSTGRES_HOSTNAME }}
+{{- printf "%s" .Values.puppetdb.extraEnv.OPENVOXDB_POSTGRES_HOSTNAME -}}
 {{- end -}}
 {{- end -}}
 

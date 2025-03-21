@@ -1,9 +1,9 @@
 apiVersion: v2
 name: puppetserver
-version: 9.6.0
-appVersion: 7.17.3
-description: Puppet automates the delivery and operation of software.
-keywords: ["puppet", "puppetserver", "automation", "iac", "infrastructure", "cm", "ci", "cd"]
+version: 10.0.0
+appVersion: 8.8.0
+description: OpenVox automates the delivery and operation of software.
+keywords: ["OpenVox", "OpenVoxserver", "automation", "iac", "infrastructure", "cm", "ci", "cd"]
 home: https://puppet.com/
 icon: https://secure.gravatar.com/avatar/fdd009b7c1ec96e088b389f773e87aec.jpg?s=80&r=g&d=mm
 dependencies:

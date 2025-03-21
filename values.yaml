@@ -63,8 +63,8 @@ global:
 ##
 puppetserver:
   name: puppetserver
-  image: ghcr.io/voxpupuli/puppetserver
-  tag: 7.17.3-main
+  image: ghcr.io/openvoxproject/openvoxserver
+  tag: 8.8.0-main
   pullPolicy: IfNotPresent
 
   ## Configure persistence for Puppet Server
@@ -765,8 +765,8 @@ r10k:
 puppetdb:
   enabled: true
   name: puppetdb
-  image: voxpupuli/puppetdb
-  tag: 7.20.0-main
+  image: ghcr.io/openvoxproject/openvoxdb
+  tag: 8.9.0-main
   pullPolicy: IfNotPresent
   resources: {}
   #  requests:

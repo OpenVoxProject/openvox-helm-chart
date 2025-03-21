@@ -210,7 +210,7 @@ spec:
           resources:
             {{- toYaml .Values.puppetserver.compilers.resources | nindent 12 }}
           env:
-            - name: PUPPETSERVER_HOSTNAME
+            - name: OPENVOXSERVER_HOSTNAME
             {{- if .Values.singleCA.enabled }}
               value: {{ (include "puppetserver.puppetserver-masters.serviceName" . | quote ) }}
             {{- else }}
@@ -218,17 +218,17 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             {{- end }}
-            - name: PUPPET_MASTERPORT
+            - name: OPENVOXSERVER_PORT
               value: "{{ template "puppetserver.puppetserver-compilers.port" . }}"
             - name: DNS_ALT_NAMES
               value: "{{ template "puppetserver.compilers.hostnames" . }},{{ template "puppetserver.puppetserver-compilers.serviceName" . }},{{.Values.puppetserver.compilers.fqdns.alternateServerNames}}"
-            - name: PUPPETDB_SERVER_URLS
+            - name: OPENVOXDB_SERVER_URLS
               value: https://{{ if .Values.singleCA.enabled}}{{.Values.singleCA.puppetdb.overrideHostname}}{{else }}{{ ( include "puppetdb.fullname" . ) }}{{end}}:8081
             - name: CA_ENABLED
               value: "false"
             - name: CA_HOSTNAME
               value: "{{ template "puppetserver.puppetserver-masters.serviceName" . }}"
-            - name: CA_MASTERPORT
+            - name: CA_PORT
               value: "{{ template "puppetserver.puppetserver-masters.port" . }}"
             {{- range $key, $value := .Values.global.extraEnv }}
             - name: {{ $key }}
