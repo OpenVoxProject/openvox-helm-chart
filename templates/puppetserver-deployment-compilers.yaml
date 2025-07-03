@@ -211,7 +211,6 @@ spec:
             - exec /opt/puppetlabs/bin/puppetserver foreground
           {{- end }}
           env:
-            {{- if not .Values.global.runAsNonRoot }}
             # necessary to set certname and server in puppet.conf, required by
             # puppetserver ca cli application
             {{- if .Values.singleCA.enabled }}
@@ -233,7 +232,6 @@ spec:
               value: "{{ template "puppetserver.puppetserver-masters.serviceName" . }}"
             - name: CA_PORT
               value: "{{ template "puppetserver.puppetserver-masters.port" . }}"
-            {{- end }}
             {{- range $key, $value := .Values.global.extraEnv }}
             - name: {{ $key }}
               value: "{{ $value }}"
@@ -255,7 +253,7 @@ spec:
             httpGet:
               path: /status/v1/simple
               port: {{ template "puppetserver.puppetserver-compilers.port" . }}
-              scheme: {{ .Values.puppetserver.compilers.readinessProbeScheme }} 
+              scheme: {{ .Values.puppetserver.compilers.readinessProbeScheme }}
             periodSeconds: {{ .Values.puppetserver.compilers.readinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.puppetserver.compilers.readinessProbeTimeout }}
             failureThreshold: {{ .Values.puppetserver.compilers.readinessProbeFailureThreshold }}
@@ -447,7 +445,7 @@ spec:
           - name: puppet-puppet-storage
             mountPath: /etc/puppetlabs/puppet/
           readinessProbe:
-            exec: 
+            exec:
               command: ["/bin/sh", "-ec", "test -f {{ .Values.r10k.hiera.cronJob.successFile }}"]
             failureThreshold: 2
             initialDelaySeconds: 5
@@ -553,7 +551,7 @@ spec:
         {{- with .Values.puppetserver.compilers.extraContainers }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        
+
       {{- if .Values.singleCA.puppetdb.overrideHostname }}
       {{- $service := lookup "v1" "Service" .Release.Namespace  (include "puppetdb.fullname" . ) }}
       hostAliases:
