@@ -756,7 +756,7 @@ spec:
       nodeSelector:
         {{ toYaml .Values.nodeSelector | nindent 10 }}
       {{- end }}
-      { template "puppetserver.masters.affinity" . }}
+      {{ template "puppetserver.masters.affinity" . }}
       {{- if .Values.tolerations }}
       tolerations:
         {{ toYaml .Values.tolerations | nindent 10 }}
