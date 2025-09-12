@@ -55,6 +55,8 @@ spec:
               restic forget --prune --keep-last {{ .Values.puppetserver.masters.backup.restic.keep_last }}
             resources:
               {{- toYaml .Values.puppetserver.masters.backup.resources | nindent 14 }}
+            securityContext:
+              {{- toYaml .Values.puppetserver.masters.backup.securityContext | nindent 14 }}
             env:
             - name: RESTIC_REPOSITORY
               value: {{ .Values.puppetserver.masters.backup.restic.repository | quote }}

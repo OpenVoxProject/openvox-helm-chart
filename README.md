@@ -132,7 +132,7 @@ The benefit of this approach is that any Compatible Restic environment variables
 ```
 masters:
   extraLabels:
-    azure.workload.identity/use: "true"   
+    azure.workload.identity/use: "true"
   backup:
     enabled: true
     serviceAccount:
@@ -331,6 +331,7 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `puppetserver.masters.multiMasters.autoScaling.memoryUtilizationPercentage` | Target masters memory utilization percentage to scale | `75`|
 | `puppetserver.masters.backup.enabled` | If true, enable master backup with a kubernetes CronJob and restic | `false`|
 | `puppetserver.masters.backup.resources` | puppetserver restic backup CronJob resource limits | ``|
+| `puppetserver.masters.backup.securityContext` | puppetserver restic backup CronJob securityContext | ``|
 | `puppetserver.masters.backup.failedJobsHistoryLimit` | puppetserver restic backup CronJob failedJobsHistoryLimit | `5`|
 | `puppetserver.masters.backup.successfulJobsHistoryLimit` | puppetserver restic backup CronJob successfulJobsHistoryLimit | `2`|
 | `puppetserver.masters.backup.schedule` | puppetserver restic backup CronJob schedule | `@every 12h`|

@@ -360,6 +360,7 @@ puppetserver:
       #  limits:
       #    memory: 512Mi
       #    cpu: 1000m
+      securityContext: {}
 
       failedJobsHistoryLimit: 5
       successfulJobsHistoryLimit: 2
