@@ -31,7 +31,9 @@ spec:
       targetPort: {{ .Values.metrics.prometheus.port }}
     {{- end }}
   {{- if eq .Values.puppetdb.service.type "ClusterIP" }}
-  clusterIP: {{ .Values.puppetdb.service.clusterIP  }}
+    {{- if hasKey .Values.puppetdb.service "clusterIP" }}
+  clusterIP: {{ .Values.puppetdb.service.clusterIP }}
+    {{- end }}
   {{- end }}
   selector:
     {{- include "puppetserver.puppetdb.matchLabels" . | nindent 4 }}
