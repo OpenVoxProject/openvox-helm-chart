@@ -903,6 +903,9 @@ puppetdb:
 postgresql:
   enabled: true
 
+  image:
+    repository: bitnamilegacy/postgresql
+
   architecture: standalone
 
   networkPolicy:
