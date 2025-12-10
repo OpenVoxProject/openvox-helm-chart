@@ -5,6 +5,9 @@ numbering uses [semantic versioning](http://semver.org).
 
 NOTE: The change log until version `v0.2.4` is auto-generated.
 
+## [v10.0.1](https://github.com/OpenVoxProject/openvox-helm-chart/tree/v10.0.1) (2025-12-10)
+- Fix: #14 - fixed postgresql subchart referencing deprecated chart image - TODO a permanent fix
+
 ## [v10.0.0](https://github.com/OpenVoxProject/openvox-helm-chart/tree/v10.0.0) (2025-03-19)
 - Feat: Switch to OpenVox Containers
 - Feat: Default to Openvox v8 of OpenVox-server and OpenVoxDB
