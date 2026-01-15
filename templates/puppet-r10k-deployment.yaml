@@ -42,7 +42,7 @@ spec:
           command:
             {{- range .Values.r10k.code.command }}
             - {{ . | quote }}
-            {{- end}}
+            {{- end }}
           args:
             {{- range .Values.r10k.code.args }}
             - {{ . | quote }}
