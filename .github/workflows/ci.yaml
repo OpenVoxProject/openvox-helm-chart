@@ -1,0 +1,40 @@
+---
+name: 🚦 CI
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Lint and Build Helm chart
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          check-latest: true
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.8.0
+
+      - name: Run helm unit tests
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git
+          helm unittest ./
+
+      - name: Create testing cluster
+        uses: helm/kind-action@v1.14.0
+
+      - name: Run chart-testing (lint)
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }} --charts ./
+
+      - name: Run chart-testing (install)
+        run: ct install --target-branch ${{ github.event.repository.default_branch }} --charts ./
+        
