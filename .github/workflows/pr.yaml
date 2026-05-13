@@ -1,0 +1,10 @@
+name: PR Testing
+
+on:
+  pull_request:
+
+jobs:
+  tests:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml  # use the callable tests job to run tests 

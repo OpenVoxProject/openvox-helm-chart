@@ -1,42 +1,12 @@
-name: CI / Release
+name: Release
 
 on:
-  pull_request:
   workflow_dispatch:
 
 jobs:
   test:
-    name: Lint and Build Helm chart
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          check-latest: true
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.6.0
-
-      - name: Run helm unit tests
-        run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm plugin install https://github.com/helm-unittest/helm-unittest.git
-          helm unittest ./
-
-      - name: Create testing cluster
-        uses: helm/kind-action@v1.8.0
-
-      - name: Run chart-testing (lint)
-        run: ct lint --target-branch ${{ github.event.repository.default_branch }} --charts ./
-
-      - name: Run chart-testing (install)
-        run: ct install --target-branch ${{ github.event.repository.default_branch }} --charts ./
-        
+    uses: ./.github/workflows/ci.yml  # use the callable tests job to run tests
+       
   publish:
     name: Publish Helm chart
     runs-on: ubuntu-latest
@@ -47,7 +17,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Fetch history
         run: git fetch --prune --unshallow
       - name: Install Helm
@@ -63,29 +33,14 @@ jobs:
       - name: Package the chart
         run: helm package . --destination .release-packages --dependency-update
 
-      - name: Prep release notes
-        run: |
-          release_notes=`sed -n '/^## \['v${{ env.VERSION }}'\]/,/^## /p' CHANGELOG.md | sed -n '/^- /p'`
-          echo "RELEASE NOTES: $release_notes"
-          echo "$release_notes" > body.md
-          release_name=`echo "$release_notes"| head -1 | sed 's/^- //'`
-          echo "RELEASE_NAME=$release_name" >> $GITHUB_ENV
-
       - name: Make the release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2.6.1
         with:
+          generate_release_notes: true
           tag_name: v${{ env.VERSION }}
-          release_name: ${{ env.RELEASE_NAME }}
-          body_path: body.md
-
-      - name: upload artifacts to the release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./.release-packages/puppetserver-${{ env.VERSION }}.tgz
-          asset_name: puppetserver-${{ env.VERSION }}.tgz
-          asset_content_type: application/gzip
+          name: v${{ env.VERSION }}
+          files: ./.release-packages/puppetserver-${{ env.VERSION }}.tgz
 
       - name: update ghpages
         run: |
