@@ -1,0 +1,25 @@
+suite: test openvoxview ingress creation
+templates:
+  - openvoxview-ingress.yaml
+release:
+  name: puppetserver
+  namespace: puppet
+tests:
+  - it: should not create the openvoxview ingress by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create openvoxview ingress when enabled
+    set:
+      openvoxview.enabled: true
+      openvoxview.ingress.enabled: true
+      openvoxview.ingress.hosts:
+        - openvoxview.example.com
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: puppetserver-puppetdb-openvoxview
+      - matchSnapshot: {}

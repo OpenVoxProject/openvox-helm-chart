@@ -218,6 +218,57 @@ spec:
             - name: puppetdb-storage
               mountPath: /opt/puppetlabs/server/data/puppetdb
         {{- end }}
+        {{- if .Values.openvoxview.enabled }}
+        - name: openvoxview
+          image: "{{.Values.openvoxview.image}}:{{.Values.openvoxview.tag}}"
+          imagePullPolicy: "{{.Values.openvoxview.pullPolicy}}"
+          resources:
+            {{- toYaml .Values.openvoxview.resources | nindent 12 }}
+          env:
+            - name: LISTEN
+              value: "0.0.0.0"
+            - name: PORT
+              value: {{ .Values.openvoxview.port | quote }}
+            - name: PUPPETDB_HOST
+              value: {{ if .Values.singleCA.enabled}}{{.Values.singleCA.puppetdb.overrideHostname}}{{ else }}{{ ( include "puppetdb.fullname" . ) }}{{ end }}
+            - name: PUPPETDB_PORT
+              value: "8081"
+            - name: PUPPETDB_TLS
+              value: "true"
+            - name: PUPPETDB_TLS_CA
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/ca.pem"
+            - name: PUPPETDB_TLS_KEY
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/private_keys/openvoxdb.pem"
+            - name: PUPPETDB_TLS_CERT
+              value: "/opt/puppetlabs/server/data/puppetdb/certs/certs/openvoxdb.pem"
+            {{- range $key, $value := .Values.global.extraEnv }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+            {{- range $key, $value := .Values.openvoxview.extraEnv }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+          envFrom:
+          {{- if .Values.global.extraEnvSecret }}
+            - secretRef:
+                name: {{ .Values.global.extraEnvSecret }}
+          {{- end }}
+          {{- if .Values.openvoxview.extraEnvSecret }}
+            - secretRef:
+                name: {{ .Values.openvoxview.extraEnvSecret }}
+          {{- end }}
+          ports:
+            - name: openvoxview
+              containerPort: {{ .Values.openvoxview.port }}
+          securityContext:
+            {{- toYaml .Values.openvoxview.securityContext | nindent 12 }}
+            runAsUser: {{ .Values.global.securityContext.runAsUser }}
+            runAsGroup: {{ .Values.global.securityContext.runAsGroup }}
+          volumeMounts:
+            - name: puppetdb-storage
+              mountPath: /opt/puppetlabs/server/data/puppetdb
+        {{- end }}
         {{- if and .Values.singleCA.enabled .Values.singleCA.crl.asSidecar }}
         # singleCA crl script update Sidecar
         - name: update-crl

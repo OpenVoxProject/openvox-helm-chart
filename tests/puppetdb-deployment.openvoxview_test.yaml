@@ -1,0 +1,14 @@
+suite: test puppetdb deployment openvoxview integration
+templates:
+  - puppetdb-deployment.yaml
+release:
+  name: puppetserver
+  namespace: puppet
+tests:
+  - it: should include openvoxview sidecar when enabled
+    set:
+      openvoxview.enabled: true
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchSnapshot: {}

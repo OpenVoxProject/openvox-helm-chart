@@ -985,6 +985,61 @@ puppetboard:
     #     hosts:
     #       - puppetboard.domain.com
 
+## OpenVox View Configuration
+##
+openvoxview:
+  enabled: false
+  name: openvoxview
+  image: ghcr.io/voxpupuli/openvoxview
+  tag: v1.3.0
+  port: 5000
+  pullPolicy: IfNotPresent
+  service:
+    targetPort: openvoxview
+  resources: {}
+  #  requests:
+  #    memory: 256Mi
+  #    cpu: 200m
+  #  limits:
+  #    memory: 512Mi
+  #    cpu: 500m
+  ## Additional OpenVox View container environment variables
+  ## (these are merged on top of the defaults set by the chart)
+  ##
+  extraEnv: {}
+  ## Additional OpenVox View container environment variables from a pre-existing K8s secret
+  extraEnvSecret: ""
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - all
+  ingress:
+    ## If true, OpenVox View Ingress will be created
+    ##
+    enabled: false
+    ## OpenVox View Ingress annotations
+    ##
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+    ## OpenVox View Ingress additional labels
+    ##
+    extraLabels: {}
+    ## OpenVox View Ingress hostnames with optional path
+    ## Must be provided if Ingress is enabled
+    ##
+    hosts: []
+    #   - openvoxview.domain.com
+    #   - domain.com/openvoxview
+    ## OpenVox View Ingress TLS configuration
+    ## Secrets must be manually created in the namespace
+    ##
+    tls: []
+    #   - secretName: openvoxview-server-tls
+    #     hosts:
+    #       - openvoxview.domain.com
+
 ## Hiera Configuration for Puppet Server
 ##
 hiera:

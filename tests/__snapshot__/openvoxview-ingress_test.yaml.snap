@@ -1,0 +1,22 @@
+should create openvoxview ingress when enabled:
+  1: |
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      labels:
+        app.kubernetes.io/component: puppetdb
+        app.kubernetes.io/instance: puppetserver
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: puppetserver
+        app.kubernetes.io/version: 8.8.0
+        helm.sh/chart: puppetserver-10.0.3
+      name: puppetserver-puppetdb-openvoxview
+    spec:
+      rules:
+        - host: openvoxview.example.com
+          http:
+            paths:
+              - backend:
+                  serviceName: puppetserver-puppetdb
+                  servicePort: 5000
+                path: /
