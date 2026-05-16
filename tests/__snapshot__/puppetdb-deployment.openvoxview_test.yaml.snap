@@ -1,0 +1,173 @@
+should include openvoxview sidecar when enabled:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/component: puppetdb
+        app.kubernetes.io/instance: puppetserver
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: puppetserver
+        app.kubernetes.io/version: 8.8.0
+        helm.sh/chart: puppetserver-10.0.3
+      name: puppetserver-puppetdb
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/component: puppetdb
+          app.kubernetes.io/name: puppetserver
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/component: puppetdb
+            app.kubernetes.io/instance: puppetserver
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/name: puppetserver
+            app.kubernetes.io/version: 8.8.0
+            helm.sh/chart: puppetserver-10.0.3
+        spec:
+          containers:
+            - env:
+                - name: OPENVOXSERVER_HOSTNAME
+                  value: puppetserver-puppet
+                - name: OPENVOXSERVER_PORT
+                  value: "8140"
+                - name: DNS_ALT_NAMES
+                  value: openvoxdb,puppetdb,puppetserver-puppetdb
+                - name: OPENVOXDB_POSTGRES_HOSTNAME
+                  value: puppetserver-postgresql-hl
+                - name: OPENVOXDB_POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: password
+                      name: puppetserver-puppetdb-postgresql
+                - name: OPENVOXDB_POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: username
+                      name: puppetserver-puppetdb-postgresql
+                - name: PUPPETDB_JAVA_ARGS
+                  value: ""
+              envFrom: null
+              image: ghcr.io/openvoxproject/openvoxdb:8.9.0-main
+              imagePullPolicy: IfNotPresent
+              name: puppetdb
+              ports:
+                - containerPort: 8080
+                  name: pdb-http
+                - containerPort: 8081
+                  name: pdb-https
+              resources: {}
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  add:
+                    - CAP_FOWNER
+                    - CAP_CHOWN
+                    - CAP_SETUID
+                    - CAP_SETGID
+                    - CAP_DAC_OVERRIDE
+                    - FOWNER
+                    - CHOWN
+                    - SETUID
+                    - SETGID
+                    - DAC_OVERRIDE
+                  drop:
+                    - all
+              volumeMounts:
+                - mountPath: /opt/puppetlabs/server/data/puppetdb
+                  name: puppetdb-storage
+            - env:
+                - name: LISTEN
+                  value: 0.0.0.0
+                - name: PORT
+                  value: "5000"
+                - name: PUPPETDB_HOST
+                  value: puppetserver-puppetdb
+                - name: PUPPETDB_PORT
+                  value: "8081"
+                - name: PUPPETDB_TLS
+                  value: "true"
+                - name: PUPPETDB_TLS_CA
+                  value: /opt/puppetlabs/server/data/puppetdb/certs/certs/ca.pem
+                - name: PUPPETDB_TLS_KEY
+                  value: /opt/puppetlabs/server/data/puppetdb/certs/private_keys/openvoxdb.pem
+                - name: PUPPETDB_TLS_CERT
+                  value: /opt/puppetlabs/server/data/puppetdb/certs/certs/openvoxdb.pem
+              envFrom: null
+              image: ghcr.io/voxpupuli/openvoxview:v1.3.0
+              imagePullPolicy: IfNotPresent
+              name: openvoxview
+              ports:
+                - containerPort: 5000
+                  name: openvoxview
+              resources: {}
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - all
+                runAsGroup: 999
+                runAsNonRoot: true
+                runAsUser: 999
+              volumeMounts:
+                - mountPath: /opt/puppetlabs/server/data/puppetdb
+                  name: puppetdb-storage
+          hostname: puppetdb
+          imagePullSecrets: null
+          initContainers:
+            - command:
+                - sh
+                - -c
+                - |
+                  echo 'Waiting for PostgreSQL to become ready...'
+                  until printf "." && nc -z -w 2 puppetserver-postgresql-hl 5432; do
+                      sleep 2;
+                  done;
+                  echo 'PostgreSQL OK ✓'
+              image: docker.io/busybox:1.37
+              imagePullPolicy: IfNotPresent
+              name: pgchecker
+              resources:
+                limits:
+                  cpu: 20m
+                  memory: 32Mi
+                requests:
+                  cpu: 20m
+                  memory: 32Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsGroup: 1000
+                runAsNonRoot: true
+                runAsUser: 1000
+            - command:
+                - sh
+                - -c
+                - |
+                  echo 'Waiting for puppetserver to become ready...'
+                  until printf "." && curl --silent --fail --insecure 'https://puppetserver-puppet:8140/status/v1/simple' | grep -q '^running$'; do
+                    sleep 2;
+                  done;
+                  echo 'Puppetserver OK ✓'
+              image: curlimages/curl:8.11.1
+              imagePullPolicy: IfNotPresent
+              name: wait-puppetserver
+              resources:
+                limits:
+                  cpu: 20m
+                  memory: 32Mi
+                requests:
+                  cpu: 20m
+                  memory: 32Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsGroup: 1000
+                runAsNonRoot: true
+                runAsUser: 1000
+          volumes:
+            - name: puppetdb-storage
+              persistentVolumeClaim:
+                claimName: puppetserver-puppetdb-claim

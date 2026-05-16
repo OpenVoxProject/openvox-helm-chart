@@ -25,6 +25,11 @@ spec:
       port: {{ .Values.puppetboard.port }}
       targetPort: {{ .Values.puppetboard.service.targetPort }}
     {{- end }}
+    {{- if .Values.openvoxview.enabled }}
+    - name: openvoxview
+      port: {{ .Values.openvoxview.port }}
+      targetPort: {{ .Values.openvoxview.service.targetPort }}
+    {{- end }}
     {{- if .Values.metrics.prometheus.enabled }}
     - name: metrics
       port: {{ .Values.metrics.prometheus.port }}

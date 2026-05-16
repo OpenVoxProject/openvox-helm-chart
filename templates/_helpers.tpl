@@ -123,6 +123,16 @@ app.kubernetes.io/component: {{ .Values.puppetboard.name }}
 {{ include "puppetserver.common.matchLabels" . }}
 {{- end -}}
 
+{{- define "puppetserver.openvoxview.labels" -}}
+{{ include "puppetserver.openvoxview.matchLabels" . }}
+{{ include "puppetserver.common.metaLabels" . }}
+{{- end -}}
+
+{{- define "puppetserver.openvoxview.matchLabels" -}}
+app.kubernetes.io/component: {{ .Values.openvoxview.name }}
+{{ include "puppetserver.common.matchLabels" . }}
+{{- end -}}
+
 {{- define "puppetserver.puppetserver.labels" -}}
 {{ include "puppetserver.puppetserver.matchLabels" . }}
 {{ include "puppetserver.common.metaLabels" . }}

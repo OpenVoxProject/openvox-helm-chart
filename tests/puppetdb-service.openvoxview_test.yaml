@@ -1,0 +1,14 @@
+suite: test puppetdb service openvoxview port
+templates:
+  - puppetdb-service.yaml
+release:
+  name: puppetserver
+  namespace: puppet
+tests:
+  - it: should expose openvoxview port when enabled
+    set:
+      openvoxview.enabled: true
+    asserts:
+      - isKind:
+          of: Service
+      - matchSnapshot: {}

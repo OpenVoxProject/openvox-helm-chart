@@ -501,6 +501,21 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `puppetboard.ingress.extraLabels`| puppetboard ingress extraLabels |``|
 | `puppetboard.ingress.hosts`| puppetboard ingress hostnames |``|
 | `puppetboard.ingress.tls`| puppetboard ingress tls configuration |``|
+| `openvoxview.enabled` | OpenVox View availability | `false`|
+| `openvoxview.name` | OpenVox View component label | `openvoxview`|
+| `openvoxview.image` | OpenVox View image | `ghcr.io/voxpupuli/openvoxview`|
+| `openvoxview.tag` | OpenVox View image tag | `latest`|
+| `openvoxview.port` | OpenVox View container port | `5000`|
+| `openvoxview.pullPolicy` | OpenVox View image pull policy | `IfNotPresent`|
+| `openvoxview.resources` | OpenVox View resource limits |``|
+| `openvoxview.extraEnv` | OpenVox View additional container env vars |``|
+| `openvoxview.extraEnvSecret` | OpenVox View additional container env vars from pre-existing secret |``|
+| `openvoxview.service.targetPort` | target port for the OpenVox View service port |`openvoxview`|
+| `openvoxview.ingress.enabled`| OpenVox View ingress creation enabled |`false`|
+| `openvoxview.ingress.annotations`| OpenVox View ingress annotations |``|
+| `openvoxview.ingress.extraLabels`| OpenVox View ingress extraLabels |``|
+| `openvoxview.ingress.hosts`| OpenVox View ingress hostnames |``|
+| `openvoxview.ingress.tls`| OpenVox View ingress tls configuration |``|
 | `hiera.name` | hiera component label | `hiera`|
 | `hiera.hieradataurl`| hieradata repo url |``|
 | `hiera.config`| hieradata yaml config |``|
@@ -620,6 +635,27 @@ jobs | grep 'port-forward' | grep 'puppetserver'
 # [1]+  Running                 kubectl port-forward -n puppetserver svc/puppet 8140:8140 &
 kill %[job_numbers_above]
 ```
+
+### Example: Enabling OpenVox View
+
+To enable the OpenVox View dashboard as a sidecar on the PuppetDB pod, you can use a values file similar to:
+
+```yaml
+openvoxview:
+  enabled: true
+  image: ghcr.io/voxpupuli/openvoxview
+  tag: latest
+  port: 5000
+  ingress:
+    enabled: true
+    hosts:
+      - openvoxview.example.com
+
+puppetboard:
+  enabled: false
+```
+
+You can also enable both dashboards at the same time by setting both `openvoxview.enabled` and `puppetboard.enabled` to `true` and configuring distinct ingress hosts or paths.
 
 ## Credits
 
