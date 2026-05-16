@@ -16,6 +16,9 @@ jobs:
         uses: actions/checkout@v6
       - name: Install Helm
         uses: azure/setup-helm@v4.3.1
+        # pinned due to https://github.com/helm/helm/issues/31490
+        with:
+          version: 'v3.19.2'
       - uses: actions/setup-python@v4
         with:
           python-version: '3.13'
