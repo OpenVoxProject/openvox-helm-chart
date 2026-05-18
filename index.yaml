@@ -2,6 +2,55 @@ apiVersion: v1
 entries:
   puppetserver:
   - apiVersion: v2
+    appVersion: 8.13.0
+    created: "2026-05-18T13:35:37.571165921Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.11
+    description: OpenVox automates the delivery and operation of software.
+    digest: 3b6f48e9360640e519bba61e5f45044fd8736434b8935a7a59836a8d91e92719
+    home: https://puppet.com/
+    icon: https://secure.gravatar.com/avatar/fdd009b7c1ec96e088b389f773e87aec.jpg?s=80&r=g&d=mm
+    keywords:
+    - OpenVox
+    - OpenVoxserver
+    - automation
+    - iac
+    - infrastructure
+    - cm
+    - ci
+    - cd
+    kubeVersion: '>=1.10.0-0'
+    maintainers:
+    - email: miroslav.hadzhiev@gmail.com
+      name: Xtigyro
+    - email: morgan@puppet.com
+      name: underscorgan
+    - email: slconley@gmail.com
+      name: slconley
+    - email: raphael.pinson@camptocamp.com
+      name: raphink
+    - email: david.phayanouvong@gmail.com
+      name: davidphay
+    - email: reinier@skoef.nl
+      name: skoef
+    - email: niels@hojen.net
+      name: nielshojen
+    - email: linas@daneliukas.eu
+      name: ldaneliukas
+    - email: anthony@sts.io
+      name: anthonysomerset
+    name: puppetserver
+    sources:
+    - https://github.com/puppetlabs/pupperware/
+    - https://github.com/postgres/postgres
+    - https://github.com/bitnami/charts/tree/master/bitnami/postgresql
+    urls:
+    - https://OpenVoxProject.github.io/openvox-helm-chart/puppetserver-10.1.0.tgz
+    version: 10.1.0
+  - apiVersion: v2
     appVersion: 8.8.0
     created: "2026-05-16T13:33:04.92868009Z"
     dependencies:
@@ -3669,4 +3718,4 @@ entries:
     urls:
     - https://puppetlabs.github.io/puppetserver-helm-chart/puppetserver-1.8.5.tgz
     version: 1.8.5
-generated: "2026-05-16T13:33:04.92019844Z"
+generated: "2026-05-18T13:35:37.563081595Z"
