@@ -238,7 +238,6 @@ spec:
             - exec /opt/puppetlabs/bin/puppetserver foreground
           {{- end }}
           env:
-            {{- if not .Values.global.runAsNonRoot }}
             - name: OPENVOXSERVER_HOSTNAME
               value: puppet
             # necessary to set certname and server in puppet.conf, required by
@@ -256,7 +255,6 @@ spec:
               value: https://{{ if .Values.singleCA.enabled}}{{.Values.singleCA.puppetdb.overrideHostname}}{{else }}{{ ( include "puppetdb.fullname" . ) }}{{end}}:8081
             - name: CA_ALLOW_SUBJECT_ALT_NAMES
               value: "true"
-            {{- end }}
             {{- range $key, $value := .Values.global.extraEnv }}
             - name: {{ $key }}
               value: "{{ $value }}"
@@ -278,7 +276,7 @@ spec:
             httpGet:
               path: /status/v1/simple
               port: {{ template "puppetserver.puppetserver-masters.port" .}}
-              scheme: {{ .Values.puppetserver.masters.readinessProbeScheme }} 
+              scheme: {{ .Values.puppetserver.masters.readinessProbeScheme }}
             periodSeconds: {{ .Values.puppetserver.masters.readinessProbePeriodSeconds }}
             timeoutSeconds: {{ .Values.puppetserver.masters.readinessProbeTimeout }}
             failureThreshold: {{ .Values.puppetserver.masters.readinessProbeFailureThreshold }}
