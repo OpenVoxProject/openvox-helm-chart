@@ -8,8 +8,8 @@ manifest should match snapshot:
         app.kubernetes.io/instance: puppetserver
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
-        app.kubernetes.io/version: 8.8.0
-        helm.sh/chart: puppetserver-10.0.3
+        app.kubernetes.io/version: 8.13.0
+        helm.sh/chart: puppetserver-10.1.0
       name: puppetserver-puppetserver-compiler
     spec:
       replicas: 1
@@ -30,8 +30,8 @@ manifest should match snapshot:
             app.kubernetes.io/instance: puppetserver
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
-            app.kubernetes.io/version: 8.8.0
-            helm.sh/chart: puppetserver-10.0.3
+            app.kubernetes.io/version: 8.13.0
+            helm.sh/chart: puppetserver-10.1.0
         spec:
           containers:
             - env:
@@ -50,7 +50,7 @@ manifest should match snapshot:
                 - name: CA_PORT
                   value: "8140"
               envFrom: null
-              image: ghcr.io/openvoxproject/openvoxserver:8.8.0-main
+              image: ghcr.io/openvoxproject/openvoxserver:8.13.0-main
               imagePullPolicy: IfNotPresent
               livenessProbe:
                 failureThreshold: 3
@@ -114,7 +114,7 @@ manifest should match snapshot:
                 - -c
               env: null
               envFrom: null
-              image: ghcr.io/openvoxproject/openvoxserver:8.8.0-main
+              image: ghcr.io/openvoxproject/openvoxserver:8.13.0-main
               imagePullPolicy: IfNotPresent
               name: perms-and-dirs
               resources:

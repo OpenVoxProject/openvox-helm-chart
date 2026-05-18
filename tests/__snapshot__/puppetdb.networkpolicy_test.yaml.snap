@@ -8,8 +8,8 @@ manifest should match snapshot:
         app.kubernetes.io/instance: puppetserver
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
-        app.kubernetes.io/version: 8.8.0
-        helm.sh/chart: puppetserver-10.0.3
+        app.kubernetes.io/version: 8.13.0
+        helm.sh/chart: puppetserver-10.1.0
       name: puppetserver-puppetdb
     spec:
       egress:
