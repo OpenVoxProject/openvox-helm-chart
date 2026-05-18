@@ -8,8 +8,8 @@ should include openvoxview sidecar when enabled:
         app.kubernetes.io/instance: puppetserver
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
-        app.kubernetes.io/version: 8.8.0
-        helm.sh/chart: puppetserver-10.0.3
+        app.kubernetes.io/version: 8.13.0
+        helm.sh/chart: puppetserver-10.1.0
       name: puppetserver-puppetdb
     spec:
       selector:
@@ -26,8 +26,8 @@ should include openvoxview sidecar when enabled:
             app.kubernetes.io/instance: puppetserver
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
-            app.kubernetes.io/version: 8.8.0
-            helm.sh/chart: puppetserver-10.0.3
+            app.kubernetes.io/version: 8.13.0
+            helm.sh/chart: puppetserver-10.1.0
         spec:
           containers:
             - env:
@@ -52,7 +52,7 @@ should include openvoxview sidecar when enabled:
                 - name: PUPPETDB_JAVA_ARGS
                   value: ""
               envFrom: null
-              image: ghcr.io/openvoxproject/openvoxdb:8.9.0-main
+              image: ghcr.io/openvoxproject/openvoxdb:8.13.0-main
               imagePullPolicy: IfNotPresent
               name: puppetdb
               ports:
@@ -98,7 +98,7 @@ should include openvoxview sidecar when enabled:
                 - name: PUPPETDB_TLS_CERT
                   value: /opt/puppetlabs/server/data/puppetdb/certs/certs/openvoxdb.pem
               envFrom: null
-              image: ghcr.io/voxpupuli/openvoxview:v1.3.0
+              image: ghcr.io/voxpupuli/openvoxview:v1.4.0
               imagePullPolicy: IfNotPresent
               name: openvoxview
               ports:
@@ -152,7 +152,7 @@ should include openvoxview sidecar when enabled:
                     sleep 2;
                   done;
                   echo 'Puppetserver OK ✓'
-              image: curlimages/curl:8.11.1
+              image: curlimages/curl:8.20.0
               imagePullPolicy: IfNotPresent
               name: wait-puppetserver
               resources:
