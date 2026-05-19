@@ -9,7 +9,7 @@ should include openvoxview sidecar when enabled:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
         app.kubernetes.io/version: 8.13.0
-        helm.sh/chart: puppetserver-10.1.0
+        helm.sh/chart: puppetserver-10.1.1
       name: puppetserver-puppetdb
     spec:
       selector:
@@ -27,7 +27,7 @@ should include openvoxview sidecar when enabled:
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
             app.kubernetes.io/version: 8.13.0
-            helm.sh/chart: puppetserver-10.1.0
+            helm.sh/chart: puppetserver-10.1.1
         spec:
           containers:
             - env:
