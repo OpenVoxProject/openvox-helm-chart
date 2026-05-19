@@ -4,7 +4,18 @@
 
 [Full Changelog](https://github.com/OpenVoxProject/openvox-helm-chart/compare/v10.0.1...HEAD)
 
+<<<<<<< affinity
+## [v10.1.0](https://github.com/OpenVoxProject/openvox-helm-chart/tree/v10.1.0) (2026-01-15)
+- Feat: Add affinity, nodeSelector, tolerations, and priorityClassName to r10k deployment
+- Fix: Change puppetmaster deplyoment affinity to use template which includes antiaffinity rules for multimasters
+- Fix: Cosmetic whitespace fixes
+
+## [v10.0.0](https://github.com/OpenVoxProject/openvox-helm-chart/tree/v10.0.0) (2025-03-19)
+- Feat: Switch to OpenVox Containers
+- Feat: Default to Openvox v8 of OpenVox-server and OpenVoxDB
+=======
 **Fixed bugs:**
+>>>>>>> main
 
 - \[Bug\]: CI tests failing due to bitnami image removals [\#14](https://github.com/OpenVoxProject/openvox-helm-chart/issues/14)
 

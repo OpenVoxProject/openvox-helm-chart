@@ -42,7 +42,7 @@ spec:
           command:
             {{- range .Values.r10k.code.command }}
             - {{ . | quote }}
-            {{- end}}
+            {{- end }}
           args:
             {{- range .Values.r10k.code.args }}
             - {{ . | quote }}
@@ -164,7 +164,7 @@ spec:
             - name: r10k-hiera-volume
               mountPath: /etc/puppetlabs/puppet/r10k_hiera.yaml
               subPath: r10k_hiera.yaml
-            {{- if and (or (.Values.hiera.eyaml.existingMap) (.Values.hiera.eyaml.existingSecret)) (not .Values.hiera.eyaml.public_key) (not .Values.hiera.eyaml.private_key)  }}
+            {{- if and (or (.Values.hiera.eyaml.existingMap) (.Values.hiera.eyaml.existingSecret)) (not .Values.hiera.eyaml.public_key) (not .Values.hiera.eyaml.private_key) }}
             - name: eyaml-volume
               mountPath: /etc/puppetlabs/puppet/eyaml/keys
             {{- end }}
@@ -265,7 +265,7 @@ spec:
         - name: eyamlpriv-volume
           secret:
             secretName: {{ template "puppetserver.hiera.privateSecret" . }}
-        {{- else if .Values.hiera.eyaml.existingMap  }}
+        {{- else if .Values.hiera.eyaml.existingMap }}
         - name: eyaml-volume
           configMap:
             name: {{ .Values.hiera.eyaml.existingMap }}
@@ -276,4 +276,19 @@ spec:
           secret:
             secretName: {{ $extraSecret.name }}
         {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | nindent 10 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity:
+        {{ toYaml .Values.affinity | nindent 10 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+        {{ toYaml .Values.tolerations | nindent 10 }}
+      {{- end }}
+      {{- if and (.Capabilities.APIVersions.Has "scheduling.k8s.io/v1beta1") (.Values.priorityClassName) }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
 {{- end }}
