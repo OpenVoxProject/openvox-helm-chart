@@ -138,12 +138,6 @@ spec:
               drop:
                 - all
               add:
-                - CAP_CHOWN
-                - CAP_SETUID
-                - CAP_SETGID
-                - CAP_DAC_OVERRIDE
-                - CAP_AUDIT_WRITE
-                - CAP_FOWNER
                 - CHOWN
                 - SETUID
                 - SETGID
