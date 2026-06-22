@@ -382,6 +382,7 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `puppetserver.compilers.podManagementPolicy` | puppetserver compilers statefulset pod management policy | `OrderedReady`|
 | `puppetserver.compilers.fqdns.alternateServerNames` | puppetserver compilers alternate fqdns |``|
 | `puppetserver.compilers.service.type` | puppetserver compilers svc type | `ClusterIP`|
+| `puppetserver.compilers.service.additionalSpec` | additional spec for the compiler service | ``|
 | `puppetserver.compilers.service.ports` | puppetserver compilers svc exposed ports | `puppetserver`|
 | `puppetserver.compilers.service.annotations`| puppetserver compilers svc annotations |``|
 | `puppetserver.compilers.service.labels`| puppetserver compilers additional svc labels |``|
