@@ -13,6 +13,9 @@ metadata:
     {{- toYaml .Values.puppetserver.compilers.service.annotations | nindent 4 }}
   {{- end }}
 spec:
+  {{- with .Values.puppetserver.compilers.service.additionalSpec }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
   ports:
     {{- range $key, $value := .Values.puppetserver.compilers.service.ports }}
     - name: {{ $key }}

@@ -519,6 +519,8 @@ puppetserver:
       #  service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type: "private"
       labels: {}
       loadBalancerIP: ""
+      ## Additional service specification
+      additionalSpec: {}
       ## Headless service for Puppet Server Compilers
       headless:
         ports:
