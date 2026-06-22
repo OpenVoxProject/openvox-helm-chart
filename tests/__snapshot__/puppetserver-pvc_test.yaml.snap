@@ -12,6 +12,7 @@ manifest should match snapshot:
         app.kubernetes.io/version: 8.13.0
         helm.sh/chart: puppetserver-10.1.1
       name: puppetserver-puppet-claim
+      namespace: puppet
     spec:
       accessModes:
         - ReadWriteOnce

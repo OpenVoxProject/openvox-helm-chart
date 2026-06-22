@@ -11,6 +11,7 @@ manifest should match snapshot:
         app.kubernetes.io/version: 8.13.0
         helm.sh/chart: puppetserver-10.1.1
       name: puppetserver-compilers
+      namespace: puppet
     spec:
       maxUnavailable: 2
       minAvailable: 1

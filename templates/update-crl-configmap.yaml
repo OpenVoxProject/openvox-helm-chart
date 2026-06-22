@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ template "puppetserver.fullname" . }}-crl-config
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver.labels" . | nindent 4 }}
     {{- with .Values.puppetserver.masters.extraLabels }}

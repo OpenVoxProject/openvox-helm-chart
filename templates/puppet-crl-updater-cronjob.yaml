@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ template "puppetserver.fullname" . }}-crl-updater
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver.labels" . | nindent 4 }}
     {{- with .Values.singleCA.crl.extraLabels -}}

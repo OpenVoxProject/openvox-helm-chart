@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ template "puppetserver.fullname" . }}-docker-entrypoint-config
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.r10k.labels" . | nindent 4 }}
   annotations:
