@@ -8,8 +8,8 @@ should include openvoxview sidecar when enabled:
         app.kubernetes.io/instance: puppetserver
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
-        app.kubernetes.io/version: 8.13.0
-        helm.sh/chart: puppetserver-10.1.1
+        app.kubernetes.io/version: 8.15.1
+        helm.sh/chart: puppetserver-11.0.0
       name: puppetserver-puppetdb
     spec:
       selector:
@@ -26,8 +26,8 @@ should include openvoxview sidecar when enabled:
             app.kubernetes.io/instance: puppetserver
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
-            app.kubernetes.io/version: 8.13.0
-            helm.sh/chart: puppetserver-10.1.1
+            app.kubernetes.io/version: 8.15.1
+            helm.sh/chart: puppetserver-11.0.0
         spec:
           containers:
             - env:
@@ -52,7 +52,7 @@ should include openvoxview sidecar when enabled:
                 - name: PUPPETDB_JAVA_ARGS
                   value: ""
               envFrom: null
-              image: ghcr.io/openvoxproject/openvoxdb:8.13.0-main
+              image: ghcr.io/openvoxproject/openvoxdb:8.15.0-main
               imagePullPolicy: IfNotPresent
               name: puppetdb
               ports:
@@ -98,7 +98,7 @@ should include openvoxview sidecar when enabled:
                 - name: PUPPETDB_TLS_CERT
                   value: /opt/puppetlabs/server/data/puppetdb/certs/certs/openvoxdb.pem
               envFrom: null
-              image: ghcr.io/voxpupuli/openvoxview:v1.4.0
+              image: ghcr.io/voxpupuli/openvoxview:v1.7.0
               imagePullPolicy: IfNotPresent
               name: openvoxview
               ports:
@@ -110,9 +110,9 @@ should include openvoxview sidecar when enabled:
                 capabilities:
                   drop:
                     - all
-                runAsGroup: 999
+                runAsGroup: 64604
                 runAsNonRoot: true
-                runAsUser: 999
+                runAsUser: 64604
               volumeMounts:
                 - mountPath: /opt/puppetlabs/server/data/puppetdb
                   name: puppetdb-storage
@@ -122,6 +122,43 @@ should include openvoxview sidecar when enabled:
           hostname: puppetdb
           imagePullSecrets: null
           initContainers:
+            - args:
+                - mkdir -p /opt/puppetlabs/server/data/puppetdb/logs; chown -R 64604:64604 /opt/puppetlabs/server/data/puppetdb/logs; chown -R 64604:64604 /opt/puppetlabs/server/data/puppetdb;
+              command:
+                - sh
+                - -c
+              image: curlimages/curl:8.21.0
+              imagePullPolicy: IfNotPresent
+              name: setup-dirs
+              resources:
+                limits:
+                  cpu: 20m
+                  memory: 32Mi
+                requests:
+                  cpu: 20m
+                  memory: 32Mi
+              securityContext:
+                capabilities:
+                  add:
+                    - CAP_CHOWN
+                    - CAP_SETUID
+                    - CAP_SETGID
+                    - CAP_DAC_OVERRIDE
+                    - CAP_AUDIT_WRITE
+                    - CAP_FOWNER
+                    - CHOWN
+                    - SETUID
+                    - SETGID
+                    - DAC_OVERRIDE
+                    - AUDIT_WRITE
+                    - FOWNER
+                  drop:
+                    - all
+                runAsNonRoot: false
+                runAsUser: 0
+              volumeMounts:
+                - mountPath: /opt/puppetlabs/server/data/puppetdb
+                  name: puppetdb-storage
             - command:
                 - sh
                 - -c
@@ -131,7 +168,7 @@ should include openvoxview sidecar when enabled:
                       sleep 2;
                   done;
                   echo 'PostgreSQL OK ✓'
-              image: docker.io/busybox:1.37
+              image: docker.io/busybox:1.38
               imagePullPolicy: IfNotPresent
               name: pgchecker
               resources:
@@ -155,7 +192,7 @@ should include openvoxview sidecar when enabled:
                     sleep 2;
                   done;
                   echo 'Puppetserver OK ✓'
-              image: curlimages/curl:8.20.0
+              image: curlimages/curl:8.21.0
               imagePullPolicy: IfNotPresent
               name: wait-puppetserver
               resources:

@@ -45,6 +45,43 @@ spec:
       serviceAccountName: {{ include "puppetdb.serviceAccountName" . }}
       {{- end }}
       initContainers:
+        - name: setup-dirs
+          image: "{{.Values.global.curl.image}}:{{.Values.global.curl.tag}}"
+          imagePullPolicy: {{.Values.global.curl.imagePullPolicy}}
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            capabilities:
+              drop:
+                - all
+              add:
+                - CAP_CHOWN
+                - CAP_SETUID
+                - CAP_SETGID
+                - CAP_DAC_OVERRIDE
+                - CAP_AUDIT_WRITE
+                - CAP_FOWNER
+                - CHOWN
+                - SETUID
+                - SETGID
+                - DAC_OVERRIDE
+                - AUDIT_WRITE
+                - FOWNER
+          command: [ "sh", "-c" ]
+          args:
+            - mkdir -p /opt/puppetlabs/server/data/puppetdb/logs;
+              chown -R {{ .Values.global.securityContext.runAsUser }}:{{ .Values.global.securityContext.runAsGroup }} /opt/puppetlabs/server/data/puppetdb/logs;
+              chown -R {{ .Values.global.securityContext.runAsUser }}:{{ .Values.global.securityContext.runAsGroup }} /opt/puppetlabs/server/data/puppetdb;
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 20m
+              memory: 32Mi
+          volumeMounts:
+            - name: puppetdb-storage
+              mountPath: /opt/puppetlabs/server/data/puppetdb
         - name: pgchecker
           image: "{{.Values.global.pgchecker.image}}:{{.Values.global.pgchecker.tag}}"
           imagePullPolicy: {{.Values.global.pgchecker.imagePullPolicy}}

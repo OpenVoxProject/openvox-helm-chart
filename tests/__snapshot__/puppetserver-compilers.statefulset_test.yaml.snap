@@ -8,8 +8,8 @@ manifest should match snapshot:
         app.kubernetes.io/instance: puppetserver
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
-        app.kubernetes.io/version: 8.13.0
-        helm.sh/chart: puppetserver-10.1.1
+        app.kubernetes.io/version: 8.15.1
+        helm.sh/chart: puppetserver-11.0.0
       name: puppetserver-puppetserver-compiler
     spec:
       podManagementPolicy: OrderedReady
@@ -31,8 +31,8 @@ manifest should match snapshot:
             app.kubernetes.io/instance: puppetserver
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
-            app.kubernetes.io/version: 8.13.0
-            helm.sh/chart: puppetserver-10.1.1
+            app.kubernetes.io/version: 8.15.1
+            helm.sh/chart: puppetserver-11.0.0
         spec:
           containers:
             - env:
@@ -53,7 +53,7 @@ manifest should match snapshot:
                 - name: CA_PORT
                   value: "8140"
               envFrom: null
-              image: ghcr.io/openvoxproject/openvoxserver:8.13.0-main
+              image: ghcr.io/openvoxproject/openvoxserver:8.15.2-main
               imagePullPolicy: IfNotPresent
               livenessProbe:
                 failureThreshold: 3
@@ -106,13 +106,13 @@ manifest should match snapshot:
           imagePullSecrets: null
           initContainers:
             - args:
-                - mkdir -p /etc/puppetlabs/puppet/eyaml/keys; mkdir -p /etc/puppetlabs/code/environments; mkdir -p /etc/puppetlabs/puppet/manifests; mkdir -p /etc/puppetlabs/code/r10k_cache; chown -R puppet:puppet /etc/puppetlabs; cp /tmp/puppet/configmap/site.pp /etc/puppetlabs/puppet/manifests/site.pp; chown puppet:puppet /etc/puppetlabs/puppet/manifests/site.pp; mkdir -p /opt/puppetlabs/server/data/puppetserver/dropsonde/bin/; touch /opt/puppetlabs/server/data/puppetserver/dropsonde/bin/dropsonde; chown puppet:puppet -R /opt/puppetlabs/server/data/puppetserver/;
+                - mkdir -p /etc/puppetlabs/puppet/eyaml/keys; mkdir -p /etc/puppetlabs/code/environments; mkdir -p /etc/puppetlabs/puppet/manifests; mkdir -p /etc/puppetlabs/code/r10k_cache; cp /tmp/puppet/configmap/site.pp /etc/puppetlabs/puppet/manifests/site.pp; chown 64604:64604 /etc/puppetlabs/puppet/manifests/site.pp; mkdir -p /opt/puppetlabs/server/data/puppetserver/dropsonde/bin/; touch /opt/puppetlabs/server/data/puppetserver/dropsonde/bin/dropsonde; chown 64604:64604 -R /opt/puppetlabs/server/data/puppetserver/; chown -R 64604:64604 /etc/puppetlabs; chmod +x /etc/puppetlabs/puppetserver;
               command:
                 - sh
                 - -c
               env: null
               envFrom: null
-              image: ghcr.io/openvoxproject/openvoxserver:8.13.0-main
+              image: ghcr.io/openvoxproject/openvoxserver:8.15.2-main
               imagePullPolicy: IfNotPresent
               name: perms-and-dirs
               resources:
@@ -150,7 +150,7 @@ manifest should match snapshot:
                   name: manifests-volume
                   subPath: site.pp
           securityContext:
-            fsGroup: 999
+            fsGroup: 64604
           volumes:
             - configMap:
                 name: puppetserver-manifests-config

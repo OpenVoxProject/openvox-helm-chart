@@ -16,7 +16,14 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
-  - it: should create the volume by default
+  - it: should create the volume if "puppetserver.persistence.data.enabled" is true and "puppetserver.persistence.data.existingClaim" is empty
+    set:
+      puppetserver.persistence.data.enabled: true
+      puppetserver.persistence.data.existingClaim: ""
     asserts:
       - isKind:
           of: PersistentVolumeClaim
+  - it: should not create the volume by default
+    asserts:
+      - hasDocuments:
+          count: 0

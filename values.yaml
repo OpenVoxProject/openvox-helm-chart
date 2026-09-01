@@ -12,17 +12,17 @@ global:
 
   curl:
     image: curlimages/curl
-    tag: 8.20.0
+    tag: 8.21.0
     imagePullPolicy: IfNotPresent
 
   r10k:
     image: ghcr.io/voxpupuli/r10k
-    tag: 5.0.0-main
+    tag: 5.0.3-main
     imagePullPolicy: IfNotPresent
 
   pgchecker:
     image: docker.io/busybox
-    tag: 1.37
+    tag: 1.38
     imagePullPolicy: IfNotPresent
 
   puppetdbexporter:
@@ -50,9 +50,9 @@ global:
 
   ## Define the security context (not apply to all pod for now)
   securityContext:
-    runAsUser: 999  # "puppet" UID
-    runAsGroup: 999  # "puppet" GID
-    fsGroup: 999  # "puppet" GID
+    runAsUser: 64604  # "puppet" UID
+    runAsGroup: 64604  # "puppet" GID
+    fsGroup: 64604  # "puppet" GID
 
   extraEnv: {}
   extraEnvSecret: ""
@@ -64,7 +64,7 @@ global:
 puppetserver:
   name: puppetserver
   image: ghcr.io/openvoxproject/openvoxserver
-  tag: 8.13.0-main
+  tag: 8.15.2-main
   pullPolicy: IfNotPresent
 
   ## Configure persistence for Puppet Server
@@ -108,9 +108,9 @@ puppetserver:
       size: ""
 
     data:
-      ## The data of this volume is overwritten on each start, so persistence can be disabled marking
-      ## this variable to false
-      enabled: true
+      ## The data of this volume is overwritten on each start, so persistence can be enabled marking
+      ## this variable to true
+      enabled: false
       ## If an existing Persistent Volume Claim needs to be used, specify the name here.
       ## If not specified the PVC is created by this chart using the informations below or the `storage` values.
       existingClaim: ''
@@ -130,9 +130,9 @@ puppetserver:
       size: ""
 
     confd:
-      ## The data of this volume is overwritten on each start, so persistence can be disabled marking
-      ## this variable to false
-      enabled: true
+      ## The data of this volume is overwritten on each start, so persistence can be enabled marking
+      ## this variable to true
+      enabled: false
       ## If an existing Persistent Volume Claim needs to be used, specify the name here.
       ## If not specified the PVC is created by this chart using the informations below or the `storage` values.
       existingClaim: ''
@@ -665,7 +665,7 @@ r10k:
       splay: false
       splayLimit: 60
       # timeout: 60
-      successFile: ~/.r10k_code_cronjob.success
+      successFile: /tmp/.r10k_code_cronjob.success
     ## Additional r10k code container arguments
     extraArgs: []
     #   - --verbose=debug2   # error, warn, notice, info, debug, debug1, debug2
@@ -766,7 +766,7 @@ puppetdb:
   enabled: true
   name: puppetdb
   image: ghcr.io/openvoxproject/openvoxdb
-  tag: 8.13.0-main
+  tag: 8.15.0-main
   pullPolicy: IfNotPresent
   resources: {}
   #  requests:
@@ -988,10 +988,11 @@ puppetboard:
 ## OpenVox View Configuration
 ##
 openvoxview:
-  enabled: false
+  enabled: true
   name: openvoxview
   image: ghcr.io/voxpupuli/openvoxview
-  tag: v1.4.0
+  tag: v1.7.0
+
   # configure the pre-defined queries and views.
   customconfigs:
     configmap: |
