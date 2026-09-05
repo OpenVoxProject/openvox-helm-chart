@@ -33,7 +33,7 @@ spec:
       securityContext:
         {{- toYaml .Values.r10k.podSecurityContext | nindent 8 }}
         runAsUser: {{ .Values.global.securityContext.runAsUser }}
-        runAsGroup: {{ .Values.global.securityContext.runAsGroup }}
+        runAsGroup: 0 #The image only supports GID 0 see https://github.com/voxpupuli/container-r10k/blob/main/Containerfile#L89-L90
         fsGroup: {{ .Values.global.securityContext.fsGroup }}
       containers:
         - name: r10k-code
