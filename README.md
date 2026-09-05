@@ -246,6 +246,7 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `global.postgresql.auth.existingSecret`| existing k8s secret that holds puppetdb and postgresql username and password |``|
 | `global.postgresql.*`| please refer to https://github.com/bitnami/charts/tree/main/bitnami/postgresql#global-parameters |``|
 | `global.r10k.image` | r10k image | `puppet/r10k`|
+| `global.r10k.g10kEnabled` | use  cronjob in g10k format | `false`|
 | `global.r10k.tag` | r10k img tag | `3.15.2`|
 | `global.r10k.imagePullPolicy`| r10k image pull policy |`IfNotPresent`|
 | `global.extraEnv.*`| add extra environment variables to all containers |``|

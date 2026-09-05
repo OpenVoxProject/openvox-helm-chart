@@ -646,6 +646,10 @@ r10k:
         - all
   updateStrategy:
     type: RollingUpdate
+    
+  # if you want to use g10k instead of r10k, this correct the command and args of the container
+  g10kEnabled: false
+
   code:
     resources: {}
     #  requests:

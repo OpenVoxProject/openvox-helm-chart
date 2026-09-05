@@ -31,8 +31,12 @@ data:
     {{- if .Values.r10k.code.cronJob.splay }}
     sleep $(( RANDOM % {{ int .Values.r10k.code.cronJob.splayLimit }} ))
     {{- end }}
+    {{- if .Values.r10k.g10kEnabled }}
+    {{ with .Values.r10k.code.cronJob.timeout }}timeout -s 9 {{ int . }} {{ end }}/container-entrypoint.sh -config /etc/puppetlabs/puppet/r10k_code.yaml {{ template "r10k.code.args" . }} > ~/.r10k_code_cronjob.out 2>&1
+    {{- else }}
     {{ with .Values.r10k.code.cronJob.timeout }}timeout -s 9 {{ int . }} {{ end }}/container-entrypoint.sh deploy environment --config /etc/puppetlabs/puppet/r10k_code.yaml \
     --puppetfile {{ template "r10k.code.args" . }} > ~/.r10k_code_cronjob.out 2>&1
+    {{- end }}
     retVal=$?
     if [ "$retVal" -eq "0" ]; then
       touch {{ .Values.r10k.code.cronJob.successFile }} > /dev/null 2>&1
