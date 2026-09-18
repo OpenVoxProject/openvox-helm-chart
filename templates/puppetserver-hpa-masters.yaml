@@ -4,6 +4,7 @@ apiVersion: {{ include "puppetserver.autoscaling.apiVersion" . }}
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ template "puppetserver.fullname" . }}-masters-autoscaler
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver.labels" . | nindent 4 }}
     {{- with .Values.puppetserver.masters.extraLabels }}

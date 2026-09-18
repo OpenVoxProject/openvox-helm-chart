@@ -18,6 +18,7 @@ metadata:
     {{ $key }}: {{ $value }}
     {{- end }}
   name: {{ template "puppetserver.fullname" . }}-masters
+  namespace: {{ .Release.Namespace }}
 spec:
   {{- if $apiIsStable }}
   {{- if .Values.puppetserver.masters.ingress.ingressClassName }}

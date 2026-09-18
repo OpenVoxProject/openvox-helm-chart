@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "puppetserver.fullname" . }}-puppetserver-compiler
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver-compilers.labels" . | nindent 4 }}
     {{- with .Values.puppetserver.compilers.extraLabels -}}
