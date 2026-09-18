@@ -11,10 +11,10 @@
     - [NGINX Ingress Controller Configuration](#nginx-ingress-controller-configuration)
   - [Migrating from Bare-Metal Puppet Infrastructure](#migrating-from-bare-metal-puppet-infrastructure)
     - [Auto-Signing Certificate Requests](#auto-signing-certificate-requests)
-    - [Using Pre-Generated OpenVox Master Certificates](#using-pre-generated-openvox-master-certificates)
+    - [Using Pre-Generated OpenVox Server Certificates](#using-pre-generated-openvox-server-certificates)
   - [Using Single CA](#using-single-ca)
   - [Horizontal Scaling](#horizontal-scaling)
-    - [Multiple OpenVox Masters](#multiple-openvox-masters)
+    - [Multiple OpenVox Servers](#multiple-openvox-servers)
     - [Multiple OpenVox Compilers](#multiple-openvox-compilers)
     - [Multiple PostgreSQL Read Replicas](#multiple-postgresql-read-replicas)
   - [Deploy R10K as deployment](#deploy-r10k-as-deployment)
@@ -64,9 +64,9 @@ In general, the easiest way to switch the OpenVox Agents from using one OpenVox 
 
 You will also need to remove the existing certificates in `/etc/puppetlabs/puppet/ssl` on each OpenVox agent.
 
-### Using Pre-Generated OpenVox Master Certificates
+### Using Pre-Generated OpenVox Server Certificates
 
-If you prefer not to auto-sign or manually sign the OpenVox Agents' CSRs - you can use the same OpenVox master and OpenVoxDB certificates which you used in your bare-metal setup. Please archive into two separate files and place your certificates in the `init/puppet-certs/puppetserver` and `init/puppet-certs/puppetdb` directories and enable their usage in the Values file (`.Values.puppetserver.preGeneratedCertsJob.enabled`).
+If you prefer not to auto-sign or manually sign the OpenVox Agents' CSRs - you can use the same OpenVox server and OpenVoxDB certificates which you used in your bare-metal setup. Please archive into two separate files and place your certificates in the `init/puppet-certs/puppetserver` and `init/puppet-certs/puppetdb` directories and enable their usage in the Values file (`.Values.puppetserver.preGeneratedCertsJob.enabled`).
 
 > **NOTE**: For more information please check - [README.md](init/README.md). For more general knowledge on the matter you can also read the article - <https://puppet.com/docs/puppet/5.5/ssl_regenerate_certificates.html.>
 
@@ -91,15 +91,15 @@ If you prefer, you can use crl update as cronjob instead of sidecar, it reduce r
 
 ## Horizontal Scaling
 
-To achieve better availability and higher throughput of OpenVox Infrastructure, you'll need to scale out OpenVox Masters and/or OpenVox Compilers.
+To achieve better availability and higher throughput of OpenVox Infrastructure, you'll need to scale out OpenVox Servers and/or OpenVox Compilers.
 
-### Multiple OpenVox Masters
+### Multiple OpenVox Servers
 
-To achieve better availability of OpenVox Infrastructure, you can scale out OpenVox Server Masters using `.Values.puppetserver.masters.multiMasters`. These Servers are known as masters, and are responsible for the creation and signing of your OpenVox Agents' certificates. They are also responsible for receiving catalog requests from agents and synchronize the results with each other.
+To achieve better availability of OpenVox Infrastructure, you can scale out OpenVox Servers using `.Values.puppetserver.masters.multiMasters`. These Servers are known as OpenVox Servers, and are responsible for the creation and signing of your OpenVox Agents' certificates. They are also responsible for receiving catalog requests from agents and synchronize the results with each other.
 
 ### Multiple OpenVox Compilers
 
-To achieve better throughput of OpenVox Infrastructure, you can enable and scale out OpenVox Server Compilers using `.Values.puppetserver.compilers`. These Servers are known as compile masters, and are simply additional load-balanced OpenVox Servers that receive catalog requests from agents and synchronize the results with each other.
+To achieve better throughput of OpenVox Infrastructure, you can enable and scale out OpenVox Server Compilers using `.Values.puppetserver.compilers`. These Servers are known as OpenVox Compilers, and are simply additional load-balanced OpenVox Servers that receive catalog requests from agents and synchronize the results with each other.
 
 ### Multiple PostgreSQL Read Replicas
 
@@ -129,12 +129,12 @@ r10k:
 ## Deploy OpenVox deployment (master & compilers) as non root
 
 :warning: for now only openvox-server can run as non root, it's not available for the openvoxdb
-It will run a pre-install job to configure all repository & permissions for masters & compilers
+It will run a pre-install job to configure all repository & permissions for OpenVox Servers (primary & compilers)
 
 Benefits:
 
-* running OpenVox-server with limited permissions
-* improve OpenVox-server deployment (because certificate are not regenerated each time)
+* running OpenVox Servers with limited permissions
+* improve OpenVox Servers deployment (because certificate are not regenerated each time)
 
 You can enable it using:
 
@@ -188,9 +188,9 @@ masters:
 
 ## Chart Components
 
-* Creates three deployments: OpenVox Server Master/s, and OpenVoxDB.
-* Creates three statefulsets (optional): OpenVox Server Compiler/s, PostgreSQL Master, and PostgreSQL Read Replicas.
-* Creates seven services that expose: OpenVox Server Masters, OpenVox Server Compilers (optional), OpenVoxDB, PostgreSQL, and Puppetboard (optional).
+* Creates three deployments: OpenVox Server Servers (primary & compilers), and OpenVoxDB.
+* Creates three statefulsets (optional): OpenVox Server Compiler/s, PostgreSQL Primary, and PostgreSQL Read Replicas.
+* Creates seven services that expose: OpenVox Server, OpenVox Server Compilers (optional), OpenVoxDB, PostgreSQL, and Puppetboard (optional).
 * Creates secrets to hold credentials for OpenVoxDB, PosgreSQL, and r10k.
 
 ## Installing the Chart
