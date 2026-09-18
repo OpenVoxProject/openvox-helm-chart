@@ -3,6 +3,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ template "puppetserver.fullname" . }}-compilers
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver-compilers.labels" . | nindent 4 }}
     {{- with .Values.puppetserver.compilers.extraLabels }}

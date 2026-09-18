@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ template "puppetserver.fullname" . }}-jmx-config
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver.labels" . | nindent 4 }}
     {{- include "puppetserver.puppetserver-compilers.labels" . | nindent 4 }}

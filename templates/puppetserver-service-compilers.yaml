@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ template "puppetserver.puppetserver-compilers.serviceName" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver-compilers.labels" . | nindent 4 }}
     {{- if .Values.puppetserver.compilers.service.labels }}

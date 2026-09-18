@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ template "puppetserver.fullname" . }}-puppetserver-compiler
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "puppetserver.puppetserver-compilers.labels" . | nindent 4 }}
     {{- with .Values.puppetserver.compilers.extraLabels -}}
@@ -333,7 +334,7 @@ spec:
             {{- end }}
           securityContext:
             runAsUser: {{ .Values.global.securityContext.runAsUser }}
-            runAsGroup: {{ .Values.global.securityContext.runAsGroup }}
+            runAsGroup: 0 #The image only supports GID 0 see https://github.com/voxpupuli/container-r10k/blob/main/Containerfile#L89-L90
             {{- toYaml .Values.r10k.podSecurityContext | nindent 12 }}
             {{- toYaml .Values.r10k.containerSecurityContext | nindent 12 }}
           volumeMounts:
