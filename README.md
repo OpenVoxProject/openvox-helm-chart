@@ -1,5 +1,39 @@
 # HELM Chart for OpenVox Server
 
+[![CI](https://github.com/OpenVoxProject/openvox-helm-chart/actions/workflows/ci.yaml/badge.svg)](https://github.com/OpenVoxProject/openvox-helm-chart/actions/workflows/ci.yaml)
+[![License](https://img.shields.io/github/license/OpenVoxProject/openvox-helm-chart.svg)](https://github.com/OpenVoxProject/openvox-helm-chart/blob/main/LICENSE)
+
+- [HELM Chart for OpenVox Server](#helm-chart-for-openvox-server)
+  - [Introduction](#introduction)
+  - [Prerequisites](#prerequisites)
+    - [Code Repos](#code-repos)
+    - [Load-Balancing OpenVox Server](#load-balancing-openvox-server)
+    - [NGINX Ingress Controller Configuration](#nginx-ingress-controller-configuration)
+  - [Migrating from Bare-Metal Puppet Infrastructure](#migrating-from-bare-metal-puppet-infrastructure)
+    - [Auto-Signing Certificate Requests](#auto-signing-certificate-requests)
+    - [Using Pre-Generated OpenVox Master Certificates](#using-pre-generated-openvox-master-certificates)
+  - [Using Single CA](#using-single-ca)
+  - [Horizontal Scaling](#horizontal-scaling)
+    - [Multiple OpenVox Masters](#multiple-openvox-masters)
+    - [Multiple OpenVox Compilers](#multiple-openvox-compilers)
+    - [Multiple PostgreSQL Read Replicas](#multiple-postgresql-read-replicas)
+  - [Deploy R10K as deployment](#deploy-r10k-as-deployment)
+  - [Deploy OpenVox deployment (master \& compilers) as non root](#deploy-openvox-deployment-master--compilers-as-non-root)
+  - [Backups](#backups)
+  - [Chart Components](#chart-components)
+  - [Installing the Chart](#installing-the-chart)
+    - [Add Puppet Server Helm Repository](#add-puppet-server-helm-repository)
+    - [Install the Chart](#install-the-chart)
+    - [Installed Components](#installed-components)
+  - [Upgrading](#upgrading)
+    - [from Chart Version 7.x to 8.0](#from-chart-version-7x-to-80)
+    - [from Chart Versions before 10.0](#from-chart-versions-before-100)
+  - [Configuration](#configuration)
+  - [Testing Helm Chart (in progress)](#testing-helm-chart-in-progress)
+  - [Testing the Deployed Chart Resources](#testing-the-deployed-chart-resources)
+    - [Example: Enabling OpenVox View](#example-enabling-openvox-view)
+  - [Credits](#credits)
+
 ## Introduction
 
 This chart bootstraps OpenVox Server and its components on a Kubernetes cluster using the Helm package manager.
@@ -18,7 +52,7 @@ In case a Load Balancer (LB) must sit in front of OpenVox Server - please keep i
 
 ### NGINX Ingress Controller Configuration
 
-The Ingress resource is disabled by default, but if it is enabled then ssl-passthrough must be used so that OpenVox agents will get the expected server certificate when connecting to the service.  This feature must be enabled on the Ingress resource itself, but also must be enabled via command line argument to the NGINX Ingress Controller.  More information on that can be found [here](<https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/>).
+The Ingress resource is disabled by default, but if it is enabled then ssl-passthrough must be used so that OpenVox agents will get the expected server certificate when connecting to the service.  This feature must be enabled on the Ingress resource itself, but also must be enabled via command line argument to the NGINX Ingress Controller.  More information on that can be found at <https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/>.
 
 > **NOTE**: Ingress URLs must be passed in the `Values.puppetserver.masters.fqdns.alternateServerNames`. Also - in the `Values.puppetserver.compilers.fqdns.alternateServerNames` (if OpenVox Compilers and their Ingress resources are deployed).
 
@@ -42,10 +76,12 @@ If you prefer, you can use a single externally issued CA - <https://puppet.com/d
 Enable it with `.Values.singleCA.enabled`, add the crl.pem url with `.Values.singleCA.crl.url`.
 
 Generate OpenVox & OpenVoxdb secret (must be name `puppet.pem` & `puppetdb.pem`):
-```
+
+```bash
 kubectl create secret generic puppet-certificate --from-file=puppet.pem --from-file=puppet.key --from-file=ca.pem
 kubectl create secret generic puppetdb-certificate --from-file=puppetdb.pem --from-file=puppetdb.key --from-file=ca.pem
 ```
+
 finally set `.Values.singleCA.certificates.existingSecret.puppetserver` and `.Values.singleCA.certificates.existingSecret.puppetdb`.
 
 Additionnaly, if you use a public certificate authority, you can't use private SAN name, so you have to override puppetdb name with `.Values.singleCA.puppetdb.overrideHostname` (with the full name ie: openvoxdb.my.domain)
@@ -72,11 +108,13 @@ Read replica return an error on puppetdb:
 `ERROR [p.p.c.services] Will retry database connection after temporary failure: java.sql.SQLTransientConnectionException: PDBMigrationsPool: default - Connection is not available, request timed out after 3002ms.`
 
 ## Deploy R10K as deployment
+
 :warning: may not work in multi zone environment. that why it's not enable by default
 
 You can configure r10k to run as deployment instead of sidecar to avoid r10k container multiplication (and avoid r10k run conflict)
 to share r10k data between all componant (master or compiler), change the following values:
-```
+
+```yaml
 # values.yaml
 
 # change this only if you use compilers
@@ -89,15 +127,18 @@ r10k:
 ```
 
 ## Deploy OpenVox deployment (master & compilers) as non root
+
 :warning: for now only openvox-server can run as non root, it's not available for the openvoxdb
 It will run a pre-install job to configure all repository & permissions for masters & compilers
 
 Benefits:
-- running OpenVox-server with limited permissions
-- improve OpenVox-server deployment (because certificate are not regenerated each time)
+
+* running OpenVox-server with limited permissions
+* improve OpenVox-server deployment (because certificate are not regenerated each time)
 
 You can enable it using:
-```
+
+```yaml
 global.runAsNonRoot: true
 ```
 
@@ -105,7 +146,7 @@ global.runAsNonRoot: true
 
 This chart includes optional backup of CA certs using [Restic](https://restic.net/), the default configuration supports S3 or S3 compatible storage by setting a configuration similar to this:
 
-```
+```yaml
 backup:
   enabled: true
   restic:
@@ -117,7 +158,7 @@ backup:
 
 Alternatively you can define `puppetserver.masters.backup.restic.repository` and `puppetserver.masters.backup.restic.existingSecret` to use a pre-configured (NOTE: this chart will not provision the secret if defined) e.g.:
 
-```
+```yaml
 backup:
   enabled: true
   restic:
@@ -129,10 +170,10 @@ The secret needs to contain `KEY=VALUE` pairs that match up with the supported R
 
 The benefit of this approach is that any Compatible Restic environment variables can be configured via this method and you can in theory use any supported restic backend for backup. for example, Azure Blob storage can be used with the following config:
 
-```
+```yaml
 masters:
   extraLabels:
-    azure.workload.identity/use: "true"   
+    azure.workload.identity/use: "true"
   backup:
     enabled: true
     serviceAccount:
@@ -228,327 +269,327 @@ from 10.0 the default version of OpenVox Server is now 8.x - no changes should b
 
 The following table lists the configurable parameters of the Puppetserver chart and their default values.
 
-| Parameter | Description | Default|
-| --------- | ----------- | -------|
-| `global.runAsNonRoot`| run puppetserver as non root |`false`|
-| `global.curl.image`| curl image |`curlimages/curl`|
-| `global.curl.tag`| curl image tag |`8.11.1`|
-| `global.curl.imagePullPolicy`| curl image pull policy |`IfNotPresent`|
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `global.runAsNonRoot` | run puppetserver as non root | `false` |
+| `global.curl.image` | curl image | `curlimages/curl` |
+| `global.curl.tag` | curl image tag | `8.11.1` |
+| `global.curl.imagePullPolicy` | curl image pull policy | `IfNotPresent` |
 | `global.imagePullSecrets` | Global Docker registry secret names as an array | [] |
-| `global.pgchecker.image`| pgchecker image |`docker.io/busybox`|
-| `global.pgchecker.tag`| pgchecker image tag |`1.37`|
-| `global.pgchecker.imagePullPolicy`| pgchecker image pull policy |`IfNotPresent`|
-| `global.puppetdbexporter.image`| puppetdb exporter image |`camptocamp/prometheus-puppetdb-exporter`|
-| `global.puppetdbexporter.tag`| puppetdb exporter image tag |`1.1.0`|
-| `global.puppetdbexporter.imagePullPolicy`| puppetdb exporter image pull policy |`IfNotPresent`|
-| `global.postgresql.auth.username`| puppetdb and postgresql username |`puppetdb`|
-| `global.postgresql.auth.password`| puppetdb and postgresql password |`unbreakablePassword`|
-| `global.postgresql.auth.existingSecret`| existing k8s secret that holds puppetdb and postgresql username and password |``|
-| `global.postgresql.*`| please refer to https://github.com/bitnami/charts/tree/main/bitnami/postgresql#global-parameters |``|
-| `global.r10k.image` | r10k image | `puppet/r10k`|
-| `global.r10k.tag` | r10k img tag | `3.15.2`|
-| `global.r10k.imagePullPolicy`| r10k image pull policy |`IfNotPresent`|
-| `global.extraEnv.*`| add extra environment variables to all containers |``|
-| `global.extraEnvSecret`| add extra environment variables to all containers from pre-existing secret |``|
-| `puppetserver.name` | puppetserver component label | `puppetserver`|
-| `puppetserver.image` | puppetserver image | `ghcr.io/openvoxproject/openvoxserver`|
-| `puppetserver.tag` | puppetserver img tag | `8.8.0-main`|
-| `puppetserver.pullPolicy` | puppetserver img pull policy | `IfNotPresent`|
-| `puppetserver.persistence.data.enabled`| Persists /opt/puppetlabs/server/data/puppetserver/ in a PVC |`true`|
-| `puppetserver.persistence.data.existingClaim`| If non-empty, use a pre-defined PVC for puppet data |``|
-| `puppetserver.persistence.data.accessModes`| If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.data.storageClass`| If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.data.annotations`| If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
-| `puppetserver.persistence.data.size`| If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
-| `puppetserver.persistence.puppet.existingClaim`| If non-empty, use a pre-defined PVC for the puppet directory |``|
-| `puppetserver.persistence.puppet.accessModes`| If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.puppet.storageClass`| If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.puppet.annotations`| If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
-| `puppetserver.persistence.puppet.size`| If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
-| `puppetserver.persistence.code.existingClaim`| If non-empty, use a pre-defined PVC for the puppet code |``|
-| `puppetserver.persistence.code.accessModes`| If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.code.storageClass`| If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.code.annotations`| If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
-| `puppetserver.persistence.code.size`| If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
-| `puppetserver.persistence.ca.existingClaim`| If non-empty, use a pre-defined PVC for the puppet CA certificates |``|
-| `puppetserver.persistence.ca.accessModes`| If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.ca.storageClass`| If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.ca.annotations`| If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
-| `puppetserver.persistence.ca.size`| If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
-| `puppetserver.persistence.confd.enabled`| Persists /etc/puppetlabs/puppetserver/conf.d/ in a PVC |`true`|
-| `puppetserver.persistence.confd.existingClaim`| If non-empty, use a pre-defined PVC for the puppet conf.d directory |``|
-| `puppetserver.persistence.confd.accessModes`| If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.confd.storageClass`| If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.confd.annotations`| If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
-| `puppetserver.persistence.confd.size`| If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
-| `puppetserver.persistence.server.existingClaim`| If non-empty, use a pre-defined PVC for the puppetserver |``|
-| `puppetserver.persistence.server.accessModes`| If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.server.storageClass`| If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.accessModes` |
-| `puppetserver.persistence.server.annotations`| If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
-| `puppetserver.persistence.server.size`| If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
-| `puppetserver.masters.resources` | puppetserver masters resource limits | ``|
-| `puppetserver.masters.podAntiAffinity` | puppetserver masters pod affinity constraints |`false`|
-| `puppetserver.masters.podDisruptionBudget.enabled` | enable PodDisruptionBudget on puppetserver masters | `false`|
-| `puppetserver.masters.podDisruptionBudget.minAvailable` | represents the number of Pods that must be available (integer or percentage) on puppetserver masters | `1`|
-| `puppetserver.masters.podDisruptionBudget.maxUnavailable` | represents the number of Pods that can be unavailable (integer or percentage) on puppetserver masters | ``|
-| `puppetserver.masters.networkPolicy.enabled` | enable `networkPolicy` on  puppetserver masters | `false`|
-| `puppetserver.masters.networkPolicy.policyTypes` | default networkpolicy type n puppetserver masters | `[ Egress, Ingress ]`|
+| `global.pgchecker.image` | pgchecker image | `docker.io/busybox` |
+| `global.pgchecker.tag` | pgchecker image tag | `1.37` |
+| `global.pgchecker.imagePullPolicy` | pgchecker image pull policy | `IfNotPresent` |
+| `global.puppetdbexporter.image` | puppetdb exporter image | `camptocamp/prometheus-puppetdb-exporter` |
+| `global.puppetdbexporter.tag` | puppetdb exporter image tag | `1.1.0` |
+| `global.puppetdbexporter.imagePullPolicy` | puppetdb exporter image pull policy | `IfNotPresent` |
+| `global.postgresql.auth.username` | puppetdb and postgresql username | `puppetdb` |
+| `global.postgresql.auth.password` | puppetdb and postgresql password | `unbreakablePassword` |
+| `global.postgresql.auth.existingSecret` | existing k8s secret that holds puppetdb and postgresql username and password | `` |
+| `global.postgresql.*` | please refer to <https://github.com/bitnami/charts/tree/main/bitnami/postgresql#global-parameters> | `` |
+| `global.r10k.image` | r10k image | `puppet/r10k` |
+| `global.r10k.tag` | r10k img tag | `3.15.2` |
+| `global.r10k.imagePullPolicy` | r10k image pull policy | `IfNotPresent` |
+| `global.extraEnv.*` | add extra environment variables to all containers | `` |
+| `global.extraEnvSecret` | add extra environment variables to all containers from pre-existing secret | `` |
+| `puppetserver.name` | puppetserver component label | `puppetserver` |
+| `puppetserver.image` | puppetserver image | `ghcr.io/openvoxproject/openvoxserver` |
+| `puppetserver.tag` | puppetserver img tag | `8.8.0-main` |
+| `puppetserver.pullPolicy` | puppetserver img pull policy | `IfNotPresent` |
+| `puppetserver.persistence.data.enabled` | Persists /opt/puppetlabs/server/data/puppetserver/ in a PVC | `true` |
+| `puppetserver.persistence.data.existingClaim` | If non-empty, use a pre-defined PVC for puppet data | `` |
+| `puppetserver.persistence.data.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
+| `puppetserver.persistence.data.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
+| `puppetserver.persistence.data.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.data.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
+| `puppetserver.persistence.puppet.existingClaim` | If non-empty, use a pre-defined PVC for the puppet directory | `` |
+| `puppetserver.persistence.puppet.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
+| `puppetserver.persistence.puppet.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
+| `puppetserver.persistence.puppet.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.puppet.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
+| `puppetserver.persistence.code.existingClaim` | If non-empty, use a pre-defined PVC for the puppet code | `` |
+| `puppetserver.persistence.code.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
+| `puppetserver.persistence.code.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
+| `puppetserver.persistence.code.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.code.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
+| `puppetserver.persistence.ca.existingClaim` | If non-empty, use a pre-defined PVC for the puppet CA certificates | `` |
+| `puppetserver.persistence.ca.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
+| `puppetserver.persistence.ca.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
+| `puppetserver.persistence.ca.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.ca.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
+| `puppetserver.persistence.confd.enabled` | Persists /etc/puppetlabs/puppetserver/conf.d/ in a PVC | `true` |
+| `puppetserver.persistence.confd.existingClaim` | If non-empty, use a pre-defined PVC for the puppet conf.d directory | `` |
+| `puppetserver.persistence.confd.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
+| `puppetserver.persistence.confd.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
+| `puppetserver.persistence.confd.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.confd.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
+| `puppetserver.persistence.server.existingClaim` | If non-empty, use a pre-defined PVC for the puppetserver | `` |
+| `puppetserver.persistence.server.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
+| `puppetserver.persistence.server.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
+| `puppetserver.persistence.server.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.server.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
+| `puppetserver.masters.resources` | puppetserver masters resource limits | `` |
+| `puppetserver.masters.podAntiAffinity` | puppetserver masters pod affinity constraints | `false` |
+| `puppetserver.masters.podDisruptionBudget.enabled` | enable PodDisruptionBudget on puppetserver masters | `false` |
+| `puppetserver.masters.podDisruptionBudget.minAvailable` | represents the number of Pods that must be available (integer or percentage) on puppetserver masters | `1` |
+| `puppetserver.masters.podDisruptionBudget.maxUnavailable` | represents the number of Pods that can be unavailable (integer or percentage) on puppetserver masters | `` |
+| `puppetserver.masters.networkPolicy.enabled` | enable `networkPolicy` on  puppetserver masters | `false` |
+| `puppetserver.masters.networkPolicy.policyTypes` | default networkpolicy type n puppetserver masters | `[ Egress, Ingress ]` |
 | `puppetserver.masters.networkPolicy.additionnalIngressRules` | puppetserver masters resource limits | `allow 8140 from everywhere` |
-| `puppetserver.masters.extraContainers`| Extra containers to inject into the master pod |``|
-| `puppetserver.masters.extraEnv` | puppetserver masters additional container env vars |``|
-| `puppetserver.masters.extraEnvSecret` | puppetserver masters additional container env vars from pre-existing secret |``|
-| `puppetserver.masters.extraLabels` | puppetserver masters additional labels |``|
-| `puppetserver.masters.updateStrategy` | puppetserver masters update strategy |`RollingUpdate`|
-| `puppetserver.masters.readinessProbeInitialDelay` | the initial delay for the puppetserver masters readiness probe | `180`|
-| `puppetserver.masters.readinessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters readiness probe | `60`|
-| `puppetserver.masters.readinessProbeTimeout` | the timeout for the puppetserver masters readiness probe | `20`|
-| `puppetserver.masters.readinessProbeFailureThreshold` | the failure threshold for the puppetserver masters readiness probe | `3`|
-| `puppetserver.masters.readinessProbeSuccessThreshold` | the success threshold for the puppetserver masters readiness probe | `1`|
-| `puppetserver.masters.readinessProbeScheme` | the readiness probe scheme to be used | `HTTPS`|
-| `puppetserver.masters.livenessProbeInitialDelay` | the initial delay for the puppetserver masters liveness probe | `420`|
-| `puppetserver.masters.livenessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters liveness probe | `30`|
-| `puppetserver.masters.livenessProbeTimeout` | the timeout for the puppetserver masters liveness probe  | `10`|
-| `puppetserver.masters.livenessProbeFailureThreshold` | the failure threshold for the puppetserver masters liveness probe | `3`|
-| `puppetserver.masters.livenessProbeSuccessThreshold` | the success threshold for the puppetserver masters liveness probe | `1`|
-| `puppetserver.masters.startupProbePeriodSeconds` | the timeout for the puppetserver masters startup probe  | `60`|
-| `puppetserver.masters.fqdns.alternateServerNames` | puppetserver masters alternate fqdns |``|
-| `puppetserver.masters.service.type` | puppetserver masters svc type | `ClusterIP`|
-| `puppetserver.masters.service.ports` | puppetserver masters svc exposed ports | `puppetserver`|
-| `puppetserver.masters.service.annotations`| puppetserver masters svc annotations |``|
-| `puppetserver.masters.service.labels`| puppetserver additional masters svc labels |``|
-| `puppetserver.masters.service.loadBalancerIP`| puppetserver masters svc loadbalancer ip |``|
-| `puppetserver.masters.ingress.enabled`| puppetserver masters ingress creation enabled |`false`|
-| `puppetserver.masters.ingress.annotations`| puppetserver masters ingress annotations |``|
-| `puppetserver.masters.ingress.extraLabels`| puppetserver masters ingress extraLabels |``|
-| `puppetserver.masters.ingress.hosts`| puppetserver masters ingress hostnames |``|
-| `puppetserver.masters.ingress.tls`| puppetserver masters ingress tls configuration |``|
-| `puppetserver.masters.multiMasters.enabled` | If true, creates multiple Puppetserver masters | `false`|
-| `puppetserver.masters.multiMasters.manualScaling.masters` | If multiple masters are enabled, this field sets masters count | `1`|
-| `puppetserver.masters.multiMasters.autoScaling.enabled` | If true, creates masters Horizontal Pod Autoscaler | `false`|
-| `puppetserver.masters.multiMasters.autoScaling.minMasters` | If masters autoscaling enabled, this field sets minimum masters count | `1`|
-| `puppetserver.masters.multiMasters.autoScaling.maxMasters` | If masters autoscaling enabled, this field sets maximum masters count | `3`|
-| `puppetserver.masters.multiMasters.autoScaling.cpuUtilizationPercentage` | Target masters CPU utilization percentage to scale | `75`|
-| `puppetserver.masters.multiMasters.autoScaling.memoryUtilizationPercentage` | Target masters memory utilization percentage to scale | `75`|
-| `puppetserver.masters.backup.enabled` | If true, enable master backup with a kubernetes CronJob and restic | `false`|
-| `puppetserver.masters.backup.resources` | puppetserver restic backup CronJob resource limits | ``|
-| `puppetserver.masters.backup.failedJobsHistoryLimit` | puppetserver restic backup CronJob failedJobsHistoryLimit | `5`|
-| `puppetserver.masters.backup.successfulJobsHistoryLimit` | puppetserver restic backup CronJob successfulJobsHistoryLimit | `2`|
-| `puppetserver.masters.backup.schedule` | puppetserver restic backup CronJob schedule | `@every 12h`|
-| `puppetserver.masters.backup.image` | puppetserver restic backup CronJob image | `restic/restic`|
-| `puppetserver.masters.backup.tag` | puppetserver restic backup CronJob image tag | `0.17.3`|
-| `puppetserver.masters.backup.pullPolicy` | puppetserver restic backup CronJob image pullPolicy | `IfNotPresent`|
-| `puppetserver.masters.backup.caConfigMap` | puppetserver restic backup CronJob configmap for custom ca-certificates.crt | ``|
-| `puppetserver.masters.backup.serviceAccount.enabled` | puppetserver backup serviceaccount enabled, useful for setting up AKS workload identity, will not be created unless create also true | `false`|
-| `puppetserver.masters.backup.serviceAccount.create` | puppetserver backup serviceaccount create, useful for setting up AKS workload identity defaults to false | `false`|
-| `puppetserver.masters.backup.serviceAccount.annotations` | puppetserver backup service account annotations, e.g. to set client-id for AKS Workload Identity | ``|
-| `puppetserver.masters.backup.restic.keep_last` | puppetserver restic backup CronJob keep last n days | `90`|
-| `puppetserver.masters.backup.restic.repository` | puppetserver restic backup CronJob s3 compatible repository | ``|
-| `puppetserver.masters.backup.restic.existingSecret` | puppetserver restic existingSecret - use this instead of declaring access_key_id and other restic secrets in the install values or to declare other Restic environment variables | ``|
-| `puppetserver.masters.backup.restic.access_key_id` | puppetserver restic backup CronJob s3 access_key_id | ``|
-| `puppetserver.masters.backup.restic.secret_access_key` | puppetserver restic backup CronJob s3 secret_access_key | ``|
-| `puppetserver.masters.backup.restic.password` | puppetserver restic backup CronJob encryption password  | ``|
-| `puppetserver.compilers.enabled` | If true, creates Puppetserver compilers | `false`|
-| `puppetserver.compilers.resources` | puppetserver compilers resource limits |``|
-| `puppetserver.compilers.podAntiAffinity` | puppetserver compilers pod affinity constraints |`false`|
-| `puppetserver.compilers.podDisruptionBudget.enabled` | enable PodDisruptionBudget on puppetserver compilers | `false`|
-| `puppetserver.compilers.podDisruptionBudget.minAvailable` | represents the number of Pods that must be available (integer or percentage) on puppetserver compilers | `1`|
-| `puppetserver.compilers.podDisruptionBudget.maxUnavailable` | represents the number of Pods that can be unavailable (integer or percentage) on puppetserver compilers | ``|
-| `puppetserver.compilers.networkPolicy.enabled` | enable `networkPolicy` on  puppetserver compilers | `false`|
-| `puppetserver.compilers.networkPolicy.policyTypes` | default networkpolicy type on puppetserver compilers  | `[ Egress, Ingress ]`|
+| `puppetserver.masters.extraContainers` | Extra containers to inject into the master pod | `` |
+| `puppetserver.masters.extraEnv` | puppetserver masters additional container env vars | `` |
+| `puppetserver.masters.extraEnvSecret` | puppetserver masters additional container env vars from pre-existing secret | `` |
+| `puppetserver.masters.extraLabels` | puppetserver masters additional labels | `` |
+| `puppetserver.masters.updateStrategy` | puppetserver masters update strategy | `RollingUpdate` |
+| `puppetserver.masters.readinessProbeInitialDelay` | the initial delay for the puppetserver masters readiness probe | `180` |
+| `puppetserver.masters.readinessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters readiness probe | `60` |
+| `puppetserver.masters.readinessProbeTimeout` | the timeout for the puppetserver masters readiness probe | `20` |
+| `puppetserver.masters.readinessProbeFailureThreshold` | the failure threshold for the puppetserver masters readiness probe | `3` |
+| `puppetserver.masters.readinessProbeSuccessThreshold` | the success threshold for the puppetserver masters readiness probe | `1` |
+| `puppetserver.masters.readinessProbeScheme` | the readiness probe scheme to be used | `HTTPS` |
+| `puppetserver.masters.livenessProbeInitialDelay` | the initial delay for the puppetserver masters liveness probe | `420` |
+| `puppetserver.masters.livenessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters liveness probe | `30` |
+| `puppetserver.masters.livenessProbeTimeout` | the timeout for the puppetserver masters liveness probe | `10` |
+| `puppetserver.masters.livenessProbeFailureThreshold` | the failure threshold for the puppetserver masters liveness probe | `3` |
+| `puppetserver.masters.livenessProbeSuccessThreshold` | the success threshold for the puppetserver masters liveness probe | `1` |
+| `puppetserver.masters.startupProbePeriodSeconds` | the timeout for the puppetserver masters startup probe | `60` |
+| `puppetserver.masters.fqdns.alternateServerNames` | puppetserver masters alternate fqdns | `` |
+| `puppetserver.masters.service.type` | puppetserver masters svc type | `ClusterIP` |
+| `puppetserver.masters.service.ports` | puppetserver masters svc exposed ports | `puppetserver` |
+| `puppetserver.masters.service.annotations` | puppetserver masters svc annotations | `` |
+| `puppetserver.masters.service.labels` | puppetserver additional masters svc labels | `` |
+| `puppetserver.masters.service.loadBalancerIP` | puppetserver masters svc loadbalancer ip | `` |
+| `puppetserver.masters.ingress.enabled` | puppetserver masters ingress creation enabled | `false` |
+| `puppetserver.masters.ingress.annotations` | puppetserver masters ingress annotations | `` |
+| `puppetserver.masters.ingress.extraLabels` | puppetserver masters ingress extraLabels | `` |
+| `puppetserver.masters.ingress.hosts` | puppetserver masters ingress hostnames | `` |
+| `puppetserver.masters.ingress.tls` | puppetserver masters ingress tls configuration | `` |
+| `puppetserver.masters.multiMasters.enabled` | If true, creates multiple Puppetserver masters | `false` |
+| `puppetserver.masters.multiMasters.manualScaling.masters` | If multiple masters are enabled, this field sets masters count | `1` |
+| `puppetserver.masters.multiMasters.autoScaling.enabled` | If true, creates masters Horizontal Pod Autoscaler | `false` |
+| `puppetserver.masters.multiMasters.autoScaling.minMasters` | If masters autoscaling enabled, this field sets minimum masters count | `1` |
+| `puppetserver.masters.multiMasters.autoScaling.maxMasters` | If masters autoscaling enabled, this field sets maximum masters count | `3` |
+| `puppetserver.masters.multiMasters.autoScaling.cpuUtilizationPercentage` | Target masters CPU utilization percentage to scale | `75` |
+| `puppetserver.masters.multiMasters.autoScaling.memoryUtilizationPercentage` | Target masters memory utilization percentage to scale | `75` |
+| `puppetserver.masters.backup.enabled` | If true, enable master backup with a kubernetes CronJob and restic | `false` |
+| `puppetserver.masters.backup.resources` | puppetserver restic backup CronJob resource limits | `` |
+| `puppetserver.masters.backup.failedJobsHistoryLimit` | puppetserver restic backup CronJob failedJobsHistoryLimit | `5` |
+| `puppetserver.masters.backup.successfulJobsHistoryLimit` | puppetserver restic backup CronJob successfulJobsHistoryLimit | `2` |
+| `puppetserver.masters.backup.schedule` | puppetserver restic backup CronJob schedule | `@every 12h` |
+| `puppetserver.masters.backup.image` | puppetserver restic backup CronJob image | `restic/restic` |
+| `puppetserver.masters.backup.tag` | puppetserver restic backup CronJob image tag | `0.17.3` |
+| `puppetserver.masters.backup.pullPolicy` | puppetserver restic backup CronJob image pullPolicy | `IfNotPresent` |
+| `puppetserver.masters.backup.caConfigMap` | puppetserver restic backup CronJob configmap for custom ca-certificates.crt | `` |
+| `puppetserver.masters.backup.serviceAccount.enabled` | puppetserver backup serviceaccount enabled, useful for setting up AKS workload identity, will not be created unless create also true | `false` |
+| `puppetserver.masters.backup.serviceAccount.create` | puppetserver backup serviceaccount create, useful for setting up AKS workload identity defaults to false | `false` |
+| `puppetserver.masters.backup.serviceAccount.annotations` | puppetserver backup service account annotations, e.g. to set client-id for AKS Workload Identity | `` |
+| `puppetserver.masters.backup.restic.keep_last` | puppetserver restic backup CronJob keep last n days | `90` |
+| `puppetserver.masters.backup.restic.repository` | puppetserver restic backup CronJob s3 compatible repository | `` |
+| `puppetserver.masters.backup.restic.existingSecret` | puppetserver restic existingSecret - use this instead of declaring access_key_id and other restic secrets in the install values or to declare other Restic environment variables | `` |
+| `puppetserver.masters.backup.restic.access_key_id` | puppetserver restic backup CronJob s3 access_key_id | `` |
+| `puppetserver.masters.backup.restic.secret_access_key` | puppetserver restic backup CronJob s3 secret_access_key | `` |
+| `puppetserver.masters.backup.restic.password` | puppetserver restic backup CronJob encryption password | `` |
+| `puppetserver.compilers.enabled` | If true, creates Puppetserver compilers | `false` |
+| `puppetserver.compilers.resources` | puppetserver compilers resource limits | `` |
+| `puppetserver.compilers.podAntiAffinity` | puppetserver compilers pod affinity constraints | `false` |
+| `puppetserver.compilers.podDisruptionBudget.enabled` | enable PodDisruptionBudget on puppetserver compilers | `false` |
+| `puppetserver.compilers.podDisruptionBudget.minAvailable` | represents the number of Pods that must be available (integer or percentage) on puppetserver compilers | `1` |
+| `puppetserver.compilers.podDisruptionBudget.maxUnavailable` | represents the number of Pods that can be unavailable (integer or percentage) on puppetserver compilers | `` |
+| `puppetserver.compilers.networkPolicy.enabled` | enable `networkPolicy` on  puppetserver compilers | `false` |
+| `puppetserver.compilers.networkPolicy.policyTypes` | default networkpolicy type on puppetserver compilers | `[ Egress, Ingress ]` |
 | `puppetserver.compilers.networkPolicy.additionnalIngressRules` | puppetserver compilers resource limits | `allow 8140 from everywhere` |
-| `puppetserver.compilers.annotations`| puppetserver compilers statefulset annotations |``|
-| `puppetserver.compilers.extraContainers`| Extra containers to inject into the compiler pod |``|
-| `puppetserver.compilers.extraEnv` | puppetserver compilers additional container env vars |``|
-| `puppetserver.compilers.extraEnvSecret` | puppetserver compilers additional container env vars from pre-existing secret |``|
-| `puppetserver.compilers.extraLabels` | puppetserver compilers additional labels |``|
-| `puppetserver.compilers.updateStrategy` | puppetserver compilers update strategy |`RollingUpdate`|
-| `puppetserver.compilers.readinessProbeInitialDelay` | the initial delay for the puppetserver masters readiness probe | `180`|
-| `puppetserver.compilers.readinessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters readiness probe | `60`|
-| `puppetserver.compilers.readinessProbeTimeout` | the timeout for the puppetserver masters readiness probe | `20`|
-| `puppetserver.compilers.readinessProbeFailureThreshold` | the failure threshold for the puppetserver masters readiness probe | `3`|
-| `puppetserver.compilers.readinessProbeSuccessThreshold` | the success threshold for the puppetserver masters readiness probe | `1`|
-| `puppetserver.compilers.readinessScheme` | the readiness probe scheme to be used | `HTTPS`|
-| `puppetserver.compilers.livenessProbeInitialDelay` | the initial delay for the puppetserver masters liveness probe | `420`|
-| `puppetserver.compilers.livenessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters liveness probe | `30`|
-| `puppetserver.compilers.livenessProbeTimeout` | the timeout for the puppetserver masters liveness probe  | `10`|
-| `puppetserver.compilers.livenessProbeFailureThreshold` | the failure threshold for the puppetserver masters liveness probe | `3`|
-| `puppetserver.compilers.livenessProbeSuccessThreshold` | the success threshold for the puppetserver masters liveness probe | `1`|
-| `puppetserver.compilers.manualScaling.compilers` | If multiple compilers are enabled, this field sets compiler count | `1`|
-| `puppetserver.compilers.autoScaling.enabled` | If true, creates compilers Horizontal Pod Autoscaler | `false`|
-| `puppetserver.compilers.autoScaling.minCompilers` | If autoscaling enabled, this field sets minimum compiler count | `1`|
-| `puppetserver.compilers.autoScaling.maxCompilers` | If compilers autoscaling enabled, this field sets maximum compiler count | `3`|
-| `puppetserver.compilers.autoScaling.cpuUtilizationPercentage` | Target compilers CPU utilization percentage to scale | `75`|
-| `puppetserver.compilers.autoScaling.memoryUtilizationPercentage` | Target compilers memory utilization percentage to scale | `75`|
-| `puppetserver.compilers.podManagementPolicy` | puppetserver compilers statefulset pod management policy | `OrderedReady`|
-| `puppetserver.compilers.fqdns.alternateServerNames` | puppetserver compilers alternate fqdns |``|
-| `puppetserver.compilers.service.type` | puppetserver compilers svc type | `ClusterIP`|
-| `puppetserver.compilers.service.ports` | puppetserver compilers svc exposed ports | `puppetserver`|
-| `puppetserver.compilers.service.annotations`| puppetserver compilers svc annotations |``|
-| `puppetserver.compilers.service.labels`| puppetserver compilers additional svc labels |``|
-| `puppetserver.compilers.service.loadBalancerIP`| puppetserver compilers svc loadbalancer ip |``|
-| `puppetserver.compilers.service.headless.ports`| puppetserver compilers headless svc loadbalancer ip |`https`|
-| `puppetserver.compilers.service.headless.annotations`| puppetserver compilers headless svc annotations |``|
-| `puppetserver.compilers.service.headless.labels`| puppetserver compilers additional headless svc labels |``|
-| `puppetserver.compilers.ingress.enabled`| puppetserver compilers ingress creation enabled |`false`|
-| `puppetserver.compilers.ingress.annotations`| puppetserver compilers ingress annotations |``|
-| `puppetserver.compilers.ingress.extraLabels`| puppetserver compilers ingress extraLabels |``|
-| `puppetserver.compilers.ingress.hosts`| puppetserver compilers ingress hostnames |``|
-| `puppetserver.compilers.ingress.tls`| puppetserver compilers ingress tls configuration |``|
-| `puppetserver.preGeneratedCertsJob.enabled` | puppetserver pre-generated certs |`false`|
-| `puppetserver.preGeneratedCertsJob.importPuppetdb` | import puppetdb pre-generated certs |`true`|
-| `puppetserver.preGeneratedCertsJob.jobDeadline` | puppetserver pre-generated certs job deadline in seconds |`60`|
-| `puppetserver.puppeturl`| puppetserver control repo url |``|
-| `puppetserver.serviceAccount.enabled`| Enable service account (Note: Service Account will only be automatically created if `puppetserver.serviceAccount.create` is not set.  |`false`|
-| `puppetserver.serviceAccount.create`| puppetserver additional masters svc labels |`false`|
-| `puppetserver.rbac.create`| Enable PodSecurityPolicy's RBAC rules |`false`|
-| `puppetserver.psp.create`| Whether to create a PodSecurityPolicy. WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later |`false`|
-| `puppetserver.customconfigs.enabled`| puppetserver additional config map enabled |`false`|
-| `puppetserver.customconfigs.configmaps`| puppetserver additional config maps which will be mounted in /etc/puppetlab/puppetserver/conf.d/ |``|
-| `puppetserver.customentrypoints.enabled`| puppetserver additional entrypoint scripts. will be executed before puppetserver launch |`false`|
-| `puppetserver.customentrypoints.configmaps`| puppetserver additional configmaps |``|
-| `puppetserver.extraSecrets`| puppetserver additional secret which will be mounted in pod |``|
-| `puppetserver.extraInitArgs`| puppetserver additional initArgs |``|
-| `r10k.name` | r10k component label | `r10k`|
-| `r10k.image` | r10k img | `puppet/r10k`|
-| `r10k.tag` | r10k img tag | `3.15.2`|
-| `r10k.pullPolicy` | r10k img pull policy | `IfNotPresent`|
-| `r10k.code.resources` | r10k control repo resource limits |``|
-| `r10k.code.command` | r10k entrypoint command | [`/bin/sh`,`-c`]|
-| `r10k.code.args` | r10k entrypoint command argument |[`/etc/puppetlabs/puppet/r10k_code_entrypoint.sh;`]|
-| `r10k.code.readinessProbe` | r10k entrypoint |[`/bin/sh`, `-ec`, `test -f {{ .Values.r10k.code.cronJob.successFile }}`] |
-| `r10k.code.cronJob.enabled` | enable or disable r10k control repo cron job schedule policy | `true`|
-| `r10k.code.cronJob.schedule` | r10k control repo cron job schedule policy | `*/15 * * * *`|
-| `r10k.code.cronJob.splay` | apply random sleep before running r10k control repo cron job | `true`|
-| `r10k.code.cronJob.splayLimit` | maximum splay in seconds applied before running r10k control repo cron job | `60`|
-| `r10k.code.cronJob.timeout` | timeout in seconds to apply when running r10k control repo cron job takes too long | ``|
-| `r10k.code.cronJob.successFile` | path to file reflecting success of r10k control repo cron job | `~/.r10k_code_cronjob.success`|
-| `r10k.code.defaultRepoExtraConf` | yaml to be added to the default repo in r10k_code.yaml |``|
-| `r10k.code.extraArgs` | r10k control repo additional container env args |``|
-| `r10k.code.extraEnv` | r10k control repo additional container env vars |``|
-| `r10k.code.extraEnvSecret` | r10k control repo additional container env vars from pre-existing secret |``|
-| `r10k.code.viaSsh.credentials.ssh.value`| r10k control repo ssh key file |``|
-| `r10k.code.viaSsh.credentials.known_hosts.value`| r10k control repo ssh known hosts file |``|
-| `r10k.code.viaSsh.credentials.existingSecret`| r10k control repo ssh secret that holds ssh key and known hosts files |``|
-| `r10k.code.viaHttps.credentials.netrc.value`| r10k control repo https .netrc file |``|
-| `r10k.code.viaHttps.credentials.existingSecret`| r10k control repo https secret that holds .netrc file contents in `netrc` key |``|
-| `r10k.code.viaHttps.customCa.cert.value`| r10k control repo https custom CA file in PEM format |``|
-| `r10k.code.viaHttps.customCa.existingSecret`| r10k control repo https secret that holds custom CA file in PEM format in `cert` key |``|
-| `r10k.hiera.resources` | r10k hiera data resource limits |``|
-| `r10k.hiera.cronJob.enabled` | enable or disable r10k hiera data cron job schedule policy | `true`|
-| `r10k.hiera.cronJob.schedule` | r10k hiera data cron job schedule policy | `*/2 * * * *`|
-| `r10k.hiera.cronJob.splay` | apply random sleep before running r10k hiera data cron job | `true`|
-| `r10k.hiera.cronJob.splayLimit` | maximum splay in seconds applied before running r10k hiera data cron job | `60`|
-| `r10k.hiera.cronJob.timeout` | timeout in seconds to apply when running r10k hiera data cron job takes too long | ``|
-| `r10k.hiera.cronJob.successFile` | path to file reflecting success of r10k hiera data cron job | `~/.r10k_hiera_cronjob.success`|
-| `r10k.hiera.defaultRepoExtraConf` | yaml to be added to the default repo in r10k_hiera.yaml |``|
-| `r10k.hiera.extraArgs` | r10k hiera data additional container env args |``|
-| `r10k.hiera.extraEnv` | r10k hiera data additional container env vars |``|
-| `r10k.hiera.extraEnvSecret` | r10k hiera data additional container env vars from pre-existing secret |``|
-| `r10k.hiera.viaSsh.credentials.ssh.value`| r10k hiera data ssh key file |``|
-| `r10k.hiera.viaSsh.credentials.known_hosts.value`| r10k hiera data ssh known hosts file |``|
-| `r10k.hiera.viaSsh.credentials.existingSecret`| r10k hiera data ssh secret that holds ssh key and known hosts files |``|
-| `r10k.hiera.viaHttps.credentials.netrc.value`| r10k hiera data https .netrc file |``|
-| `r10k.hiera.viaHttps.credentials.existingSecret`| r10k hiera data https secret that holds .netrc file contents in `netrc` key |``|
-| `postgresql.*`| please refer to <https://github.com/bitnami/charts/tree/main/bitnami/postgresql#parameters> |``|
-| `postgresql.primary.initdb.scriptsConfigMap` | postgres initdb scripts run at first boot |`postgresql-custom-extensions`|
-| `postgresql.primary.persistence.enabled` | postgres database persistence |`true`|
-| `postgresql.primary.persistence.existingClaim` | postgres manually managed pvc |``|
-| `postgresql.primary.persistence.size` | postgres persistence pvc size |`10Gi`|
-| `postgresql.primary.persistence.annotations` | postgres annotations for the PVC |`helm.sh/resource-policy: keep`|
-| `postgresql.networkPolicy.enabled` | enable `networkPolicy` on  postgresql | `true`|
-| `puppetdb.enabled` | puppetdb component enabled |`true`|
-| `puppetdb.name` | puppetdb component label | `puppetdb`|
-| `puppetdb.image` | puppetdb img | `ghcr.io/openvoxproject/openvoxdb`|
-| `puppetdb.tag` | puppetdb img tag | `8.9.0-main`|
-| `puppetdb.pullPolicy` | puppetdb img pull policy | `IfNotPresent`|
-| `puppetdb.resources` | puppetdb resource limits |``|
-| `puppetdb.extraEnv` | puppetdb additional container env vars |``|
-| `puppetdb.extraEnvSecret` | puppetdb additional container env vars from pre-existing secret |``|
-| `puppetdb.extraLabels` | puppetdb additional labels |``|
-| `puppetdb.fqdns.alternateServerNames` | puppetdb alternate fqdns |``|
-| `puppetdb.service.type` | define `spec.type` for the puppetdb service |`ClusterIP`|
-| `puppetdb.service.annotations` | puppetdb service annotations |``|
-| `puppetdb.service.labels` | puppetdb service labels |``|
-| `puppetdb.service.loadBalancerIP` | define a fixed IP for the loadBalancerIP service |``|
-| `puppetdb.service.clusterIP` | define a fixed IP for the ClusterIP service |``|
-| `puppetdb.updateStrategy` | puppetdb update strategy |`Recreate`|
-| `puppetdb.metrics.enabled` | puppetdb metrics enable/disable flag |`false`|
-| `puppetdb.customPersistentVolumeClaim.storage.enable`| If true, use custom PVC for storage |``|
-| `puppetdb.customPersistentVolumeClaim.storage.config`| Configuration for custom PVC for storage |``|
-| `puppetdb.securityContext` | default puppetdb security context | ``|
-| `puppetdb.networkPolicy.enabled` | enable `networkPolicy` on  puppetdb | `false`|
-| `puppetdb.networkPolicy.policyTypes` | default networkpolicy type on puppetdb  | `[ Egress, Ingress ]`|
+| `puppetserver.compilers.annotations` | puppetserver compilers statefulset annotations | `` |
+| `puppetserver.compilers.extraContainers` | Extra containers to inject into the compiler pod | `` |
+| `puppetserver.compilers.extraEnv` | puppetserver compilers additional container env vars | `` |
+| `puppetserver.compilers.extraEnvSecret` | puppetserver compilers additional container env vars from pre-existing secret | `` |
+| `puppetserver.compilers.extraLabels` | puppetserver compilers additional labels | `` |
+| `puppetserver.compilers.updateStrategy` | puppetserver compilers update strategy | `RollingUpdate` |
+| `puppetserver.compilers.readinessProbeInitialDelay` | the initial delay for the puppetserver masters readiness probe | `180` |
+| `puppetserver.compilers.readinessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters readiness probe | `60` |
+| `puppetserver.compilers.readinessProbeTimeout` | the timeout for the puppetserver masters readiness probe | `20` |
+| `puppetserver.compilers.readinessProbeFailureThreshold` | the failure threshold for the puppetserver masters readiness probe | `3` |
+| `puppetserver.compilers.readinessProbeSuccessThreshold` | the success threshold for the puppetserver masters readiness probe | `1` |
+| `puppetserver.compilers.readinessScheme` | the readiness probe scheme to be used | `HTTPS` |
+| `puppetserver.compilers.livenessProbeInitialDelay` | the initial delay for the puppetserver masters liveness probe | `420` |
+| `puppetserver.compilers.livenessProbePeriodSeconds` | how often (in seconds) to perform the puppetserver masters liveness probe | `30` |
+| `puppetserver.compilers.livenessProbeTimeout` | the timeout for the puppetserver masters liveness probe | `10` |
+| `puppetserver.compilers.livenessProbeFailureThreshold` | the failure threshold for the puppetserver masters liveness probe | `3` |
+| `puppetserver.compilers.livenessProbeSuccessThreshold` | the success threshold for the puppetserver masters liveness probe | `1` |
+| `puppetserver.compilers.manualScaling.compilers` | If multiple compilers are enabled, this field sets compiler count | `1` |
+| `puppetserver.compilers.autoScaling.enabled` | If true, creates compilers Horizontal Pod Autoscaler | `false` |
+| `puppetserver.compilers.autoScaling.minCompilers` | If autoscaling enabled, this field sets minimum compiler count | `1` |
+| `puppetserver.compilers.autoScaling.maxCompilers` | If compilers autoscaling enabled, this field sets maximum compiler count | `3` |
+| `puppetserver.compilers.autoScaling.cpuUtilizationPercentage` | Target compilers CPU utilization percentage to scale | `75` |
+| `puppetserver.compilers.autoScaling.memoryUtilizationPercentage` | Target compilers memory utilization percentage to scale | `75` |
+| `puppetserver.compilers.podManagementPolicy` | puppetserver compilers statefulset pod management policy | `OrderedReady` |
+| `puppetserver.compilers.fqdns.alternateServerNames` | puppetserver compilers alternate fqdns | `` |
+| `puppetserver.compilers.service.type` | puppetserver compilers svc type | `ClusterIP` |
+| `puppetserver.compilers.service.ports` | puppetserver compilers svc exposed ports | `puppetserver` |
+| `puppetserver.compilers.service.annotations` | puppetserver compilers svc annotations | `` |
+| `puppetserver.compilers.service.labels` | puppetserver compilers additional svc labels | `` |
+| `puppetserver.compilers.service.loadBalancerIP` | puppetserver compilers svc loadbalancer ip | `` |
+| `puppetserver.compilers.service.headless.ports` | puppetserver compilers headless svc loadbalancer ip | `https` |
+| `puppetserver.compilers.service.headless.annotations` | puppetserver compilers headless svc annotations | `` |
+| `puppetserver.compilers.service.headless.labels` | puppetserver compilers additional headless svc labels | `` |
+| `puppetserver.compilers.ingress.enabled` | puppetserver compilers ingress creation enabled | `false` |
+| `puppetserver.compilers.ingress.annotations` | puppetserver compilers ingress annotations | `` |
+| `puppetserver.compilers.ingress.extraLabels` | puppetserver compilers ingress extraLabels | `` |
+| `puppetserver.compilers.ingress.hosts` | puppetserver compilers ingress hostnames | `` |
+| `puppetserver.compilers.ingress.tls` | puppetserver compilers ingress tls configuration | `` |
+| `puppetserver.preGeneratedCertsJob.enabled` | puppetserver pre-generated certs | `false` |
+| `puppetserver.preGeneratedCertsJob.importPuppetdb` | import puppetdb pre-generated certs | `true` |
+| `puppetserver.preGeneratedCertsJob.jobDeadline` | puppetserver pre-generated certs job deadline in seconds | `60` |
+| `puppetserver.puppeturl` | puppetserver control repo url | `` |
+| `puppetserver.serviceAccount.enabled` | Enable service account (Note: Service Account will only be automatically created if `puppetserver.serviceAccount.create` is not set. | `false` |
+| `puppetserver.serviceAccount.create` | puppetserver additional masters svc labels | `false` |
+| `puppetserver.rbac.create` | Enable PodSecurityPolicy's RBAC rules | `false` |
+| `puppetserver.psp.create` | Whether to create a PodSecurityPolicy. WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later | `false` |
+| `puppetserver.customconfigs.enabled` | puppetserver additional config map enabled | `false` |
+| `puppetserver.customconfigs.configmaps` | puppetserver additional config maps which will be mounted in /etc/puppetlab/puppetserver/conf.d/ | `` |
+| `puppetserver.customentrypoints.enabled` | puppetserver additional entrypoint scripts. will be executed before puppetserver launch | `false` |
+| `puppetserver.customentrypoints.configmaps` | puppetserver additional configmaps | `` |
+| `puppetserver.extraSecrets` | puppetserver additional secret which will be mounted in pod | `` |
+| `puppetserver.extraInitArgs` | puppetserver additional initArgs | `` |
+| `r10k.name` | r10k component label | `r10k` |
+| `r10k.image` | r10k img | `puppet/r10k` |
+| `r10k.tag` | r10k img tag | `3.15.2` |
+| `r10k.pullPolicy` | r10k img pull policy | `IfNotPresent` |
+| `r10k.code.resources` | r10k control repo resource limits | `` |
+| `r10k.code.command` | r10k entrypoint command | [`/bin/sh`,`-c`] |
+| `r10k.code.args` | r10k entrypoint command argument | [`/etc/puppetlabs/puppet/r10k_code_entrypoint.sh;`] |
+| `r10k.code.readinessProbe` | r10k entrypoint | [`/bin/sh`, `-ec`, `test -f {{ .Values.r10k.code.cronJob.successFile }}`] |
+| `r10k.code.cronJob.enabled` | enable or disable r10k control repo cron job schedule policy | `true` |
+| `r10k.code.cronJob.schedule` | r10k control repo cron job schedule policy | `*/15 * * * *` |
+| `r10k.code.cronJob.splay` | apply random sleep before running r10k control repo cron job | `true` |
+| `r10k.code.cronJob.splayLimit` | maximum splay in seconds applied before running r10k control repo cron job | `60` |
+| `r10k.code.cronJob.timeout` | timeout in seconds to apply when running r10k control repo cron job takes too long | `` |
+| `r10k.code.cronJob.successFile` | path to file reflecting success of r10k control repo cron job | `~/.r10k_code_cronjob.success` |
+| `r10k.code.defaultRepoExtraConf` | yaml to be added to the default repo in r10k_code.yaml | `` |
+| `r10k.code.extraArgs` | r10k control repo additional container env args | `` |
+| `r10k.code.extraEnv` | r10k control repo additional container env vars | `` |
+| `r10k.code.extraEnvSecret` | r10k control repo additional container env vars from pre-existing secret | `` |
+| `r10k.code.viaSsh.credentials.ssh.value` | r10k control repo ssh key file | `` |
+| `r10k.code.viaSsh.credentials.known_hosts.value` | r10k control repo ssh known hosts file | `` |
+| `r10k.code.viaSsh.credentials.existingSecret` | r10k control repo ssh secret that holds ssh key and known hosts files | `` |
+| `r10k.code.viaHttps.credentials.netrc.value` | r10k control repo https .netrc file | `` |
+| `r10k.code.viaHttps.credentials.existingSecret` | r10k control repo https secret that holds .netrc file contents in `netrc` key | `` |
+| `r10k.code.viaHttps.customCa.cert.value` | r10k control repo https custom CA file in PEM format | `` |
+| `r10k.code.viaHttps.customCa.existingSecret` | r10k control repo https secret that holds custom CA file in PEM format in `cert` key | `` |
+| `r10k.hiera.resources` | r10k hiera data resource limits | `` |
+| `r10k.hiera.cronJob.enabled` | enable or disable r10k hiera data cron job schedule policy | `true` |
+| `r10k.hiera.cronJob.schedule` | r10k hiera data cron job schedule policy | `*/2 * * * *` |
+| `r10k.hiera.cronJob.splay` | apply random sleep before running r10k hiera data cron job | `true` |
+| `r10k.hiera.cronJob.splayLimit` | maximum splay in seconds applied before running r10k hiera data cron job | `60` |
+| `r10k.hiera.cronJob.timeout` | timeout in seconds to apply when running r10k hiera data cron job takes too long | `` |
+| `r10k.hiera.cronJob.successFile` | path to file reflecting success of r10k hiera data cron job | `~/.r10k_hiera_cronjob.success` |
+| `r10k.hiera.defaultRepoExtraConf` | yaml to be added to the default repo in r10k_hiera.yaml | `` |
+| `r10k.hiera.extraArgs` | r10k hiera data additional container env args | `` |
+| `r10k.hiera.extraEnv` | r10k hiera data additional container env vars | `` |
+| `r10k.hiera.extraEnvSecret` | r10k hiera data additional container env vars from pre-existing secret | `` |
+| `r10k.hiera.viaSsh.credentials.ssh.value` | r10k hiera data ssh key file | `` |
+| `r10k.hiera.viaSsh.credentials.known_hosts.value` | r10k hiera data ssh known hosts file | `` |
+| `r10k.hiera.viaSsh.credentials.existingSecret` | r10k hiera data ssh secret that holds ssh key and known hosts files | `` |
+| `r10k.hiera.viaHttps.credentials.netrc.value` | r10k hiera data https .netrc file | `` |
+| `r10k.hiera.viaHttps.credentials.existingSecret` | r10k hiera data https secret that holds .netrc file contents in `netrc` key | `` |
+| `postgresql.*` | please refer to <https://github.com/bitnami/charts/tree/main/bitnami/postgresql#parameters> | `` |
+| `postgresql.primary.initdb.scriptsConfigMap` | postgres initdb scripts run at first boot | `postgresql-custom-extensions` |
+| `postgresql.primary.persistence.enabled` | postgres database persistence | `true` |
+| `postgresql.primary.persistence.existingClaim` | postgres manually managed pvc | `` |
+| `postgresql.primary.persistence.size` | postgres persistence pvc size | `10Gi` |
+| `postgresql.primary.persistence.annotations` | postgres annotations for the PVC | `helm.sh/resource-policy: keep` |
+| `postgresql.networkPolicy.enabled` | enable `networkPolicy` on  postgresql | `true` |
+| `puppetdb.enabled` | puppetdb component enabled | `true` |
+| `puppetdb.name` | puppetdb component label | `puppetdb` |
+| `puppetdb.image` | puppetdb img | `ghcr.io/openvoxproject/openvoxdb` |
+| `puppetdb.tag` | puppetdb img tag | `8.9.0-main` |
+| `puppetdb.pullPolicy` | puppetdb img pull policy | `IfNotPresent` |
+| `puppetdb.resources` | puppetdb resource limits | `` |
+| `puppetdb.extraEnv` | puppetdb additional container env vars | `` |
+| `puppetdb.extraEnvSecret` | puppetdb additional container env vars from pre-existing secret | `` |
+| `puppetdb.extraLabels` | puppetdb additional labels | `` |
+| `puppetdb.fqdns.alternateServerNames` | puppetdb alternate fqdns | `` |
+| `puppetdb.service.type` | define `spec.type` for the puppetdb service | `ClusterIP` |
+| `puppetdb.service.annotations` | puppetdb service annotations | `` |
+| `puppetdb.service.labels` | puppetdb service labels | `` |
+| `puppetdb.service.loadBalancerIP` | define a fixed IP for the loadBalancerIP service | `` |
+| `puppetdb.service.clusterIP` | define a fixed IP for the ClusterIP service | `` |
+| `puppetdb.updateStrategy` | puppetdb update strategy | `Recreate` |
+| `puppetdb.metrics.enabled` | puppetdb metrics enable/disable flag | `false` |
+| `puppetdb.customPersistentVolumeClaim.storage.enable` | If true, use custom PVC for storage | `` |
+| `puppetdb.customPersistentVolumeClaim.storage.config` | Configuration for custom PVC for storage | `` |
+| `puppetdb.securityContext` | default puppetdb security context | `` |
+| `puppetdb.networkPolicy.enabled` | enable `networkPolicy` on  puppetdb | `false` |
+| `puppetdb.networkPolicy.policyTypes` | default networkpolicy type on puppetdb | `[ Egress, Ingress ]` |
 | `puppetdb.networkPolicy.additionnalIngressRules` | puppetdb resource limits | `allow 9090 from everywhere` |
-| `puppetdb.extraContainers`| Extra containers to inject into the puppetdb pod |``|
-| `puppetdb.extraInitContainers`| Extra initContainers to inject into the puppetdb pod |``|
-| `puppetdb.serviceAccount.enabled`| Enable service account (Note: Service Account will only be automatically created if `puppetdb.serviceAccount.create` is not set.  |`false`|
-| `puppetdb.customconfigs.enabled`| puppetdb additional config map enabled |`false`|
-| `puppetdb.serviceAccount.create`| puppetdb additional masters svc labels |`false`|
-| `puppetdb.rbac.create`| Enable PodSecurityPolicy's RBAC rules |`false`|
-| `puppetdb.psp.create`| Whether to create a PodSecurityPolicy. WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later |`false`|
-| `puppetboard.enabled` | puppetboard availability | `false`|
-| `puppetboard.name` | puppetboard component label | `puppetboard`|
-| `puppetboard.image` | puppetboard img | `ghcr.io/voxpupuli/puppetboard`|
-| `puppetboard.tag` | puppetboard img tag | `6.0.0`|
-| `puppetboard.port` | puppetboard container port | `9090`|
-| `puppetboard.pullPolicy` | puppetboard img pull policy | `IfNotPresent`|
-| `puppetboard.resources` | puppetboard resource limits |``|
-| `puppetboard.extraEnv` | puppetboard additional container env vars |``|
-| `puppetboard.extraEnvSecret` | puppetboard additional container env vars from pre-existing secret |``|
-| `puppetboard.service.targetPort` | target port for the puppetboard service port |`puppetboard`|
-| `puppetboard.ingress.enabled`| puppetboard ingress creation enabled |`false`|
-| `puppetboard.ingress.annotations`| puppetboard ingress annotations |``|
-| `puppetboard.ingress.extraLabels`| puppetboard ingress extraLabels |``|
-| `puppetboard.ingress.hosts`| puppetboard ingress hostnames |``|
-| `puppetboard.ingress.tls`| puppetboard ingress tls configuration |``|
-| `openvoxview.enabled` | OpenVox View availability | `false`|
-| `openvoxview.name` | OpenVox View component label | `openvoxview`|
-| `openvoxview.image` | OpenVox View image | `ghcr.io/voxpupuli/openvoxview`|
-| `openvoxview.tag` | OpenVox View image tag | `latest`|
-| `openvoxview.port` | OpenVox View container port | `5000`|
-| `openvoxview.pullPolicy` | OpenVox View image pull policy | `IfNotPresent`|
-| `openvoxview.resources` | OpenVox View resource limits |``|
-| `openvoxview.extraEnv` | OpenVox View additional container env vars |``|
-| `openvoxview.extraEnvSecret` | OpenVox View additional container env vars from pre-existing secret |``|
-| `openvoxview.service.targetPort` | target port for the OpenVox View service port |`openvoxview`|
-| `openvoxview.ingress.enabled`| OpenVox View ingress creation enabled |`false`|
-| `openvoxview.ingress.annotations`| OpenVox View ingress annotations |``|
-| `openvoxview.ingress.extraLabels`| OpenVox View ingress extraLabels |``|
-| `openvoxview.ingress.hosts`| OpenVox View ingress hostnames |``|
-| `openvoxview.ingress.tls`| OpenVox View ingress tls configuration |``|
-| `hiera.name` | hiera component label | `hiera`|
-| `hiera.hieradataurl`| hieradata repo url |``|
-| `hiera.config`| hieradata yaml config |``|
-| `hiera.eyaml.private_key`| hiera eyaml private key |``|
-| `hiera.eyaml.public_key`| hiera eyaml public key |``|
-| `nameOverride`| puppetserver components name for `component:` labels |``|
-| `nodeSelector`| Node labels for pod assignment |``|
-| `affinity`| Affinity for pod assignment |``|
-| `tolerations`| Tolerations for pod assignment |``|
-| `priorityClass`| Leverage a priorityClass to ensure your pods survive resource shortages |``|
-| `podAnnotations`| Extra Pod annotations |``|
-| `storage.accessModes`| Storage Access Modes (expects array) |`["ReadWriteOnce"]`|
-| `storage.storageClass`| Storage Class |``|
-| `storage.annotations`| Storage annotations |``|
-| `storage.size`| PVCs Storage Size |`400Mi`|
-| `singleCA.enabled`| Enable single CA |`false`|
-| `singleCA.crl.cronJob.schedule`| crl cron job schedule policy |`* 0 * * * *`|
-| `singleCA.crl.extraEnv`| crl additional container env vars |``|
-| `singleCA.crl.extraEnvSecret`| crl additional container env vars from pre-existing secret |``|
-| `singleCA.crl.resources`| crl container resource limits |``|
-| `singleCA.crl.config`| override the default crl script to retrieve the crl.pem |`see values.yaml`|
-| `singleCA.crl.url`| set the url where crl.pem is located (MANDATORY) |``|
-| `singleCA.crl.asSidecar`| configure crl updater with Kubernetes CronJob instead of pod sidecar (may not work with multi zone) |`false`|
-| `singleCA.crl.cronJob.schedule`| define CronJob schedule |`0 * * * *`|
-| `singleCA.crl.cronJob.failedJobsHistoryLimit`| puppetserver crl  CronJob failedJobsHistoryLimit |`2`|
-| `singleCA.crl.cronJob.successfulJobsHistoryLimit`| puppetserver crl  CronJob successfulJobsHistoryLimit |`2`|
-| `singleCA.crl.image`| crl updater container image |`puppet/r10k`|
-| `singleCA.crl.tag`| crl updater container image tag |`3.15.2`|
-| `singleCA.crl.imagePullPolicy`| crl updater container image pull policy |`IfNotPresent`|
-| `singleCA.crl.resources`| crl updater container ressources |``|
-| `singleCA.puppetdb.overrideHostname`| override the puppetdb hostname, needed when using CA where you can't add private SAN name |``|
-| `singleCA.certificates.existingSecret.puppetserver`| existing k8s secret that holds `ca.pem`, `puppet.pem` & `puppet.key` |``|
-| `singleCA.certificates.existingSecret.puppetdb`| existing k8s secret that holds `ca.pem`, `puppetdb.pem` & `puppetdb.key` |``|
+| `puppetdb.extraContainers` | Extra containers to inject into the puppetdb pod | `` |
+| `puppetdb.extraInitContainers` | Extra initContainers to inject into the puppetdb pod | `` |
+| `puppetdb.serviceAccount.enabled` | Enable service account (Note: Service Account will only be automatically created if `puppetdb.serviceAccount.create` is not set. | `false` |
+| `puppetdb.customconfigs.enabled` | puppetdb additional config map enabled | `false` |
+| `puppetdb.serviceAccount.create` | puppetdb additional masters svc labels | `false` |
+| `puppetdb.rbac.create` | Enable PodSecurityPolicy's RBAC rules | `false` |
+| `puppetdb.psp.create` | Whether to create a PodSecurityPolicy. WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later | `false` |
+| `puppetboard.enabled` | puppetboard availability | `false` |
+| `puppetboard.name` | puppetboard component label | `puppetboard` |
+| `puppetboard.image` | puppetboard img | `ghcr.io/voxpupuli/puppetboard` |
+| `puppetboard.tag` | puppetboard img tag | `6.0.0` |
+| `puppetboard.port` | puppetboard container port | `9090` |
+| `puppetboard.pullPolicy` | puppetboard img pull policy | `IfNotPresent` |
+| `puppetboard.resources` | puppetboard resource limits | `` |
+| `puppetboard.extraEnv` | puppetboard additional container env vars | `` |
+| `puppetboard.extraEnvSecret` | puppetboard additional container env vars from pre-existing secret | `` |
+| `puppetboard.service.targetPort` | target port for the puppetboard service port | `puppetboard` |
+| `puppetboard.ingress.enabled` | puppetboard ingress creation enabled | `false` |
+| `puppetboard.ingress.annotations` | puppetboard ingress annotations | `` |
+| `puppetboard.ingress.extraLabels` | puppetboard ingress extraLabels | `` |
+| `puppetboard.ingress.hosts` | puppetboard ingress hostnames | `` |
+| `puppetboard.ingress.tls` | puppetboard ingress tls configuration | `` |
+| `openvoxview.enabled` | OpenVox View availability | `false` |
+| `openvoxview.name` | OpenVox View component label | `openvoxview` |
+| `openvoxview.image` | OpenVox View image | `ghcr.io/voxpupuli/openvoxview` |
+| `openvoxview.tag` | OpenVox View image tag | `latest` |
+| `openvoxview.port` | OpenVox View container port | `5000` |
+| `openvoxview.pullPolicy` | OpenVox View image pull policy | `IfNotPresent` |
+| `openvoxview.resources` | OpenVox View resource limits | `` |
+| `openvoxview.extraEnv` | OpenVox View additional container env vars | `` |
+| `openvoxview.extraEnvSecret` | OpenVox View additional container env vars from pre-existing secret | `` |
+| `openvoxview.service.targetPort` | target port for the OpenVox View service port | `openvoxview` |
+| `openvoxview.ingress.enabled` | OpenVox View ingress creation enabled | `false` |
+| `openvoxview.ingress.annotations` | OpenVox View ingress annotations | `` |
+| `openvoxview.ingress.extraLabels` | OpenVox View ingress extraLabels | `` |
+| `openvoxview.ingress.hosts` | OpenVox View ingress hostnames | `` |
+| `openvoxview.ingress.tls` | OpenVox View ingress tls configuration | `` |
+| `hiera.name` | hiera component label | `hiera` |
+| `hiera.hieradataurl` | hieradata repo url | `` |
+| `hiera.config` | hieradata yaml config | `` |
+| `hiera.eyaml.private_key` | hiera eyaml private key | `` |
+| `hiera.eyaml.public_key` | hiera eyaml public key | `` |
+| `nameOverride` | puppetserver components name for `component:` labels | `` |
+| `nodeSelector` | Node labels for pod assignment | `` |
+| `affinity` | Affinity for pod assignment | `` |
+| `tolerations` | Tolerations for pod assignment | `` |
+| `priorityClass` | Leverage a priorityClass to ensure your pods survive resource shortages | `` |
+| `podAnnotations` | Extra Pod annotations | `` |
+| `storage.accessModes` | Storage Access Modes (expects array) | `["ReadWriteOnce"]` |
+| `storage.storageClass` | Storage Class | `` |
+| `storage.annotations` | Storage annotations | `` |
+| `storage.size` | PVCs Storage Size | `400Mi` |
+| `singleCA.enabled` | Enable single CA | `false` |
+| `singleCA.crl.cronJob.schedule` | crl cron job schedule policy | `* 0 * * * *` |
+| `singleCA.crl.extraEnv` | crl additional container env vars | `` |
+| `singleCA.crl.extraEnvSecret` | crl additional container env vars from pre-existing secret | `` |
+| `singleCA.crl.resources` | crl container resource limits | `` |
+| `singleCA.crl.config` | override the default crl script to retrieve the crl.pem | `see values.yaml` |
+| `singleCA.crl.url` | set the url where crl.pem is located (MANDATORY) | `` |
+| `singleCA.crl.asSidecar` | configure crl updater with Kubernetes CronJob instead of pod sidecar (may not work with multi zone) | `false` |
+| `singleCA.crl.cronJob.schedule` | define CronJob schedule | `0 * * * *` |
+| `singleCA.crl.cronJob.failedJobsHistoryLimit` | puppetserver crl  CronJob failedJobsHistoryLimit | `2` |
+| `singleCA.crl.cronJob.successfulJobsHistoryLimit` | puppetserver crl  CronJob successfulJobsHistoryLimit | `2` |
+| `singleCA.crl.image` | crl updater container image | `puppet/r10k` |
+| `singleCA.crl.tag` | crl updater container image tag | `3.15.2` |
+| `singleCA.crl.imagePullPolicy` | crl updater container image pull policy | `IfNotPresent` |
+| `singleCA.crl.resources` | crl updater container ressources | `` |
+| `singleCA.puppetdb.overrideHostname` | override the puppetdb hostname, needed when using CA where you can't add private SAN name | `` |
+| `singleCA.certificates.existingSecret.puppetserver` | existing k8s secret that holds `ca.pem`, `puppet.pem` & `puppet.key` | `` |
+| `singleCA.certificates.existingSecret.puppetdb` | existing k8s secret that holds `ca.pem`, `puppetdb.pem` & `puppetdb.key` | `` |
 | `metrics.prometheus.enabled` | enable prometheus exporter | `false` |
 | `metrics.prometheus.image` | puppetdb exporter image | `camptocamp/prometheus-puppetdb-exporter` |
 | `metrics.prometheus.tag` | puppetdb exporter tag | `1.1.0` |
@@ -562,7 +603,7 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `metrics.prometheus.jobLabel` | The label to use to retrieve the job name from. | `puppetdb` |
 | `metrics.prometheus.interval` | Interval between consecutive scrapes | `30s` |
 | `metrics.prometheus.honorLabels` | HonorLabels chooses the metric’s labels on collisions with target labels. | `true` |
-| `metrics.prometheus.disableAPICheck` |  | `` |
+| `metrics.prometheus.disableAPICheck` | | `` |
 | `metrics.prometheus.scrapeTimeout` | Timeout after which the scrape is ended If not specified, the Prometheus global scrape interval is used. | `` |
 | `metrics.prometheus.honorTimestamps` | controls whether Prometheus respects the timestamps present in scraped data. | `` |
 | `metrics.prometheus.enableHttp2` | Whether to enable HTTP2. | `` |
@@ -586,12 +627,14 @@ helm install --namespace openvoxserver --name openvoxserver openvox/puppetserver
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
 ## Testing Helm Chart (in progress)
-https://github.com/quintush/helm-unittest/
+
+<https://github.com/quintush/helm-unittest/>
 
 It would be great to test all ressources to avoid regression in the future
 
 run test:
-```
+
+```bash
 helm unittest . -u
 ```
 
@@ -687,3 +730,4 @@ You can also enable both dashboards at the same time by setting both `openvoxvie
 * [Julien Godin](https://github.com/JGodin-C2C), Contributor
 * [Diego Abelenda](https://github.com/dabelenda), Contributor
 * [Johann Agnarsson](https://github.com/johannagnarsson), Contributor
+* [Robert Waffen](https://github.com/rwaffen), Contributor (and Maintainer)
