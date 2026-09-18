@@ -1,0 +1,16 @@
+suite: test puppetserver compilers service creation
+templates:
+  - puppetserver-service-compilers.yaml
+release:
+  name: puppetserver
+  namespace: puppet
+tests:
+  - it: additionalSpec should be added in the .spec path
+    set:
+      puppetserver.compilers.enabled: true
+      puppetserver.compilers.service.additionalSpec:
+        additionalSpec1: setting1
+    asserts:
+      - equal:
+          path: spec.additionalSpec1
+          value: setting1
