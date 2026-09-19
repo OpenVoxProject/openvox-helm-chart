@@ -10,7 +10,7 @@ manifest should match snapshot:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
         app.kubernetes.io/version: 8.15.1
-        helm.sh/chart: puppetserver-11.0.0
+        helm.sh/chart: puppetserver-11.1.0
       name: puppetserver-ca-claim
       namespace: puppet
     spec:

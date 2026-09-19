@@ -300,32 +300,38 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `puppetserver.persistence.data.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
 | `puppetserver.persistence.data.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
 | `puppetserver.persistence.data.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.data.labels` | If existingClaim is empty, extra labels for the PVC created by the chart, in addition to the chart's own | `{}` |
 | `puppetserver.persistence.data.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
 | `puppetserver.persistence.puppet.existingClaim` | If non-empty, use a pre-defined PVC for the puppet directory | `` |
 | `puppetserver.persistence.puppet.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
 | `puppetserver.persistence.puppet.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
 | `puppetserver.persistence.puppet.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.puppet.labels` | If existingClaim is empty, extra labels for the PVC created by the chart, in addition to the chart's own | `{}` |
 | `puppetserver.persistence.puppet.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
 | `puppetserver.persistence.code.existingClaim` | If non-empty, use a pre-defined PVC for the puppet code | `` |
 | `puppetserver.persistence.code.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
 | `puppetserver.persistence.code.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
 | `puppetserver.persistence.code.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.code.labels` | If existingClaim is empty, extra labels for the PVC created by the chart, in addition to the chart's own | `{}` |
 | `puppetserver.persistence.code.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
 | `puppetserver.persistence.ca.existingClaim` | If non-empty, use a pre-defined PVC for the puppet CA certificates | `` |
 | `puppetserver.persistence.ca.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
 | `puppetserver.persistence.ca.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
 | `puppetserver.persistence.ca.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.ca.labels` | If existingClaim is empty, extra labels for the PVC created by the chart, in addition to the chart's own | `{}` |
 | `puppetserver.persistence.ca.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
 | `puppetserver.persistence.confd.enabled` | Persists /etc/puppetlabs/puppetserver/conf.d/ in a PVC | `true` |
 | `puppetserver.persistence.confd.existingClaim` | If non-empty, use a pre-defined PVC for the puppet conf.d directory | `` |
 | `puppetserver.persistence.confd.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
 | `puppetserver.persistence.confd.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
 | `puppetserver.persistence.confd.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.confd.labels` | If existingClaim is empty, extra labels for the PVC created by the chart, in addition to the chart's own | `{}` |
 | `puppetserver.persistence.confd.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
 | `puppetserver.persistence.server.existingClaim` | If non-empty, use a pre-defined PVC for the puppetserver | `` |
 | `puppetserver.persistence.server.accessModes` | If existingClaim is empty, the accessModes of the PVC created by the chart | the value of `storage.accessModes` |
 | `puppetserver.persistence.server.storageClass` | If existingClaim is empty, the storageClass of the PVC created by the chart | the value of `storage.storageClass` |
 | `puppetserver.persistence.server.annotations` | If existingClaim is empty, the annotations of the PVC created by the chart | the value of `storage.annotations` |
+| `puppetserver.persistence.server.labels` | If existingClaim is empty, extra labels for the PVC created by the chart, in addition to the chart's own | `{}` |
 | `puppetserver.persistence.server.size` | If existingClaim is empty, the size of the PVC created by the chart | the value of `storage.size` |
 | `puppetserver.masters.resources` | puppetserver masters resource limits | `` |
 | `puppetserver.masters.podAntiAffinity` | puppetserver masters pod affinity constraints | `false` |
@@ -709,6 +715,7 @@ You can also enable both dashboards at the same time by setting both `openvoxvie
 * [Sean Conley](https://www.linkedin.com/in/seanconley/), Maintainer
 * [Raphaël Pinson](https://github.com/raphink), Maintainer
 * [Reinier Schoof](https://github.com/skoef), Maintainer
+* [Aman Shah](https://github.com/Aman1994), Contributor
 * [Niels Højen](https://github.com/nielshojen), Maintainer
 * [Scott Cressi](https://www.linkedin.com/in/scottcressi/), Co-Author
 * [Linas Daneliukas](https://github.com/ldaneliukas), Maintainer
