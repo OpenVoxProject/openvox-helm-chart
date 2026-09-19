@@ -284,6 +284,7 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `global.puppetdbexporter.imagePullPolicy` | puppetdb exporter image pull policy | `IfNotPresent` |
 | `global.postgresql.auth.username` | puppetdb and postgresql username | `puppetdb` |
 | `global.postgresql.auth.password` | puppetdb and postgresql password | `unbreakablePassword` |
+| `global.postgresql.auth.database` | database created by the bundled postgresql and used by puppetdb. With `postgresql.enabled: false` it is not applied; set `puppetdb.extraEnv.OPENVOXDB_POSTGRES_DATABASE` instead (image default: `openvoxdb`) | `puppetdb` |
 | `global.postgresql.auth.existingSecret` | existing k8s secret that holds puppetdb and postgresql username and password | `` |
 | `global.postgresql.*` | please refer to <https://github.com/bitnami/charts/tree/main/bitnami/postgresql#global-parameters> | `` |
 | `global.r10k.image` | r10k image | `puppet/r10k` |
