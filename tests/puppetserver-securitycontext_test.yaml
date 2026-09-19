@@ -1,0 +1,38 @@
+suite: test puppetserver container group id
+release:
+  name: puppetserver
+  namespace: puppet
+set:
+  puppetserver.puppeturl: https://github.com/example/control-repo.git
+tests:
+  - it: should run the masters with GID 0, which the openvoxserver image is built for
+    template: puppetserver-deployment-masters.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 0
+  - it: should run statefulset compilers with GID 0
+    template: puppetserver-statefulset-compilers.yaml
+    set:
+      puppetserver.compilers.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 0
+  - it: should run deployment compilers with GID 0
+    template: puppetserver-deployment-compilers.yaml
+    set:
+      puppetserver.compilers.enabled: true
+      puppetserver.compilers.kind: Deployment
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 0
+  - it: should allow the group to be overridden
+    template: puppetserver-deployment-masters.yaml
+    set:
+      puppetserver.securityContext.runAsGroup: 64604
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 64604
