@@ -1,6 +1,6 @@
 apiVersion: v2
 name: puppetserver
-version: 11.0.0
+version: 11.1.0
 appVersion: 8.15.1
 description: OpenVox automates the delivery and operation of software.
 keywords: ["OpenVox", "OpenVoxserver", "automation", "iac", "infrastructure", "cm", "ci", "cd"]

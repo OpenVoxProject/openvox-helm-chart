@@ -27,3 +27,18 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+  - it: should set labels from "puppetserver.persistence.data.labels"
+    set:
+      puppetserver.persistence.data.enabled: true
+      puppetserver.persistence.data.labels:
+        velero.io/exclude-from-backup: "true"
+    asserts:
+      - equal:
+          path: metadata.labels["velero.io/exclude-from-backup"]
+          value: "true"
+  - it: should not set extra labels by default
+    set:
+      puppetserver.persistence.data.enabled: true
+    asserts:
+      - notExists:
+          path: metadata.labels["velero.io/exclude-from-backup"]

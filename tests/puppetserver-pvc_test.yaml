@@ -18,3 +18,15 @@ tests:
     asserts:
       - isKind:
           of: PersistentVolumeClaim
+  - it: should set labels from "puppetserver.persistence.puppet.labels"
+    set:
+      puppetserver.persistence.puppet.labels:
+        velero.io/exclude-from-backup: "true"
+    asserts:
+      - equal:
+          path: metadata.labels["velero.io/exclude-from-backup"]
+          value: "true"
+  - it: should not set extra labels by default
+    asserts:
+      - notExists:
+          path: metadata.labels["velero.io/exclude-from-backup"]

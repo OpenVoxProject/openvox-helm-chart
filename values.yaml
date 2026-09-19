@@ -85,6 +85,10 @@ puppetserver:
       ## Persistent Volume annotations
       ## If not specified storage.annotations is taken.
       annotations: {}
+      ## Labels to add to this PVC, in addition to the chart's own.
+      ## Useful where a label has per-volume meaning, e.g. selecting which claims a
+      ## backup tool should skip. global.extraLabels applies to every claim instead.
+      labels: {}
       ## Size request of the Persistent Volume Claim, of not specified storage.storageClass is taken.
       size: ""
 
@@ -104,6 +108,10 @@ puppetserver:
       ## Persistent Volume annotations
       ## If not specified storage.annotations is taken.
       annotations: {}
+      ## Labels to add to this PVC, in addition to the chart's own.
+      ## Useful where a label has per-volume meaning, e.g. selecting which claims a
+      ## backup tool should skip. global.extraLabels applies to every claim instead.
+      labels: {}
       ## Size request of the Persistent Volume Claim, of not specified storage.storageClass is taken.
       size: ""
 
@@ -126,6 +134,10 @@ puppetserver:
       ## Persistent Volume annotations
       ## If not specified storage.annotations is taken.
       annotations: {}
+      ## Labels to add to this PVC, in addition to the chart's own.
+      ## Useful where a label has per-volume meaning, e.g. selecting which claims a
+      ## backup tool should skip. global.extraLabels applies to every claim instead.
+      labels: {}
       ## Size request of the Persistent Volume Claim, of not specified storage.storageClass is taken.
       size: ""
 
@@ -148,6 +160,10 @@ puppetserver:
       ## Persistent Volume annotations
       ## If not specified storage.annotations is taken.
       annotations: {}
+      ## Labels to add to this PVC, in addition to the chart's own.
+      ## Useful where a label has per-volume meaning, e.g. selecting which claims a
+      ## backup tool should skip. global.extraLabels applies to every claim instead.
+      labels: {}
       ## Size request of the Persistent Volume Claim, of not specified storage.storageClass is taken.
       size: ""
 
@@ -167,6 +183,10 @@ puppetserver:
       ## Persistent Volume annotations
       ## If not specified storage.annotations is taken.
       annotations: {}
+      ## Labels to add to this PVC, in addition to the chart's own.
+      ## Useful where a label has per-volume meaning, e.g. selecting which claims a
+      ## backup tool should skip. global.extraLabels applies to every claim instead.
+      labels: {}
       ## Size request of the Persistent Volume Claim, of not specified storage.storageClass is taken.
       size: ""
 
@@ -186,6 +206,10 @@ puppetserver:
       ## Persistent Volume annotations
       ## If not specified storage.annotations is taken.
       annotations: {}
+      ## Labels to add to this PVC, in addition to the chart's own.
+      ## Useful where a label has per-volume meaning, e.g. selecting which claims a
+      ## backup tool should skip. global.extraLabels applies to every claim instead.
+      labels: {}
       ## Size request of the Persistent Volume Claim, of not specified storage.storageClass is taken.
       size: ""
 
