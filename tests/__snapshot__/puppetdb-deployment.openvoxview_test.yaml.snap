@@ -40,6 +40,8 @@ should include openvoxview sidecar when enabled:
                   value: openvoxdb,puppetdb,puppetserver-puppetdb
                 - name: OPENVOXDB_POSTGRES_HOSTNAME
                   value: puppetserver-postgresql-hl
+                - name: OPENVOXDB_POSTGRES_DATABASE
+                  value: puppetdb
                 - name: OPENVOXDB_POSTGRES_PASSWORD
                   valueFrom:
                     secretKeyRef:

@@ -753,6 +753,24 @@ Return PostgreSQL host name
 {{- end -}}
 
 {{/*
+Return the name of the database the bundled PostgreSQL creates.
+Mirrors the "postgresql.database" helper of the postgresql subchart, and
+renders templated names in the subchart's scope like the subchart does.
+The subchart's helper is not included directly because the subchart is
+not loaded when dependencies have not been built (e.g. helm unittest in CI).
+*/}}
+{{- define "puppetdb.postgresql.database" -}}
+{{- $sub := get (.Subcharts | default dict) "postgresql" | default dict -}}
+{{- $values := $sub.Values | default (mergeOverwrite (deepCopy (.Values.postgresql | default dict)) (dict "global" .Values.global)) -}}
+{{- $ctx := dict "Values" $values "Chart" ($sub.Chart | default (dict "Name" "postgresql")) "Release" .Release "Capabilities" .Capabilities "Template" .Template -}}
+{{- if $values.global.postgresql.auth.database -}}
+{{- tpl $values.global.postgresql.auth.database $ctx -}}
+{{- else if ($values.auth).database -}}
+{{- tpl $values.auth.database $ctx -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return puppetserver certificate name without extension
 */}}
 {{- define "singleCA.puppetserver.certname" -}}

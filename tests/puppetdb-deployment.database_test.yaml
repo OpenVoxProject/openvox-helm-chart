@@ -1,0 +1,94 @@
+suite: test puppetdb deployment postgresql database name
+templates:
+  - puppetdb-deployment.yaml
+release:
+  name: puppetserver
+  namespace: puppet
+tests:
+  - it: should point puppetdb at the database created by the postgresql subchart by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: puppetdb
+  - it: should follow global.postgresql.auth.database
+    set:
+      global.postgresql.auth.database: openvoxdb
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: openvoxdb
+  - it: should fall back to postgresql.auth.database when the global value is empty
+    set:
+      global.postgresql.auth.database: ""
+      postgresql.auth.database: openvoxdb
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: openvoxdb
+  - it: should render a templated database name like the postgresql subchart does
+    set:
+      global.postgresql.auth.database: "{{ .Release.Name }}-db"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: puppetserver-db
+  - it: should render a templated database name in the scope of the postgresql subchart
+    set:
+      global.postgresql.auth.database: "{{ .Values.auth.database }}"
+      postgresql.auth.database: openvoxdb
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: openvoxdb
+  - it: should resolve .Chart in a templated database name to the postgresql subchart
+    set:
+      global.postgresql.auth.database: "{{ .Chart.Name }}"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: postgresql
+  - it: should not set the database name when postgresql creates no custom database
+    set:
+      global.postgresql.auth.database: ""
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+          any: true
+  - it: should let puppetdb.extraEnv override the database name without duplicating the env var
+    set:
+      puppetdb.extraEnv.OPENVOXDB_POSTGRES_DATABASE: external
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: external
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+            value: puppetdb
+  - it: should leave the database name to the image default or extraEnv when postgresql is external
+    set:
+      postgresql.enabled: false
+      puppetdb.extraEnv.OPENVOXDB_POSTGRES_HOSTNAME: pg.example.com
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENVOXDB_POSTGRES_DATABASE
+          any: true
