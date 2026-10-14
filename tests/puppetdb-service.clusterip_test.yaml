@@ -1,0 +1,25 @@
+suite: test puppetdb service clusterIP
+templates:
+  - puppetdb-service.yaml
+release:
+  name: puppetserver
+  namespace: puppet
+tests:
+  - it: should not set clusterIP when it is an empty string
+    set:
+      puppetdb.service.clusterIP: ""
+    asserts:
+      - isKind:
+          of: Service
+      - notExists:
+          path: spec.clusterIP
+
+  - it: should set clusterIP when one is given
+    set:
+      puppetdb.service.clusterIP: 192.0.2.1
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.clusterIP
+          value: 192.0.2.1
