@@ -766,7 +766,7 @@ puppetdb:
   enabled: true
   name: puppetdb
   image: ghcr.io/openvoxproject/openvoxdb
-  tag: 8.15.0-main
+  tag: 8.18.0-main
   pullPolicy: IfNotPresent
   resources: {}
   #  requests:
