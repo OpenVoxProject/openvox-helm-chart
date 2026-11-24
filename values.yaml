@@ -604,6 +604,9 @@ puppetserver:
 
   # only if global.runAsNonRoot is false
   securityContext:
+    # The openvoxserver image is built to run as the "puppet" user with GID 0 ("USER puppet:0").
+    # Kubernetes ignores the group of an image's USER, so it has to be requested explicitly.
+    runAsGroup: 0
     allowPrivilegeEscalation: false
     capabilities:
       drop:

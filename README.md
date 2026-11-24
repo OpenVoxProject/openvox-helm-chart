@@ -448,6 +448,7 @@ The following table lists the configurable parameters of the Puppetserver chart 
 | `puppetserver.customentrypoints.enabled` | puppetserver additional entrypoint scripts. will be executed before puppetserver launch | `false` |
 | `puppetserver.customentrypoints.configmaps` | puppetserver additional configmaps | `` |
 | `puppetserver.extraSecrets` | puppetserver additional secret which will be mounted in pod | `` |
+| `puppetserver.securityContext` | security context of the puppetserver containers (masters and compilers) when `global.runAsNonRoot` is `false`. Keep `runAsGroup: 0` with the default openvoxserver image | see `values.yaml` |
 | `puppetserver.extraInitArgs` | puppetserver additional initArgs | `` |
 | `r10k.name` | r10k component label | `r10k` |
 | `r10k.image` | r10k img | `puppet/r10k` |

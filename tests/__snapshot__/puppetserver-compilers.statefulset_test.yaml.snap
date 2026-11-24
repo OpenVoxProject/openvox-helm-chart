@@ -9,7 +9,7 @@ manifest should match snapshot:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: puppetserver
         app.kubernetes.io/version: 8.15.1
-        helm.sh/chart: puppetserver-11.0.0
+        helm.sh/chart: puppetserver-11.0.1
       name: puppetserver-puppetserver-compiler
       namespace: puppet
     spec:
@@ -33,7 +33,7 @@ manifest should match snapshot:
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: puppetserver
             app.kubernetes.io/version: 8.15.1
-            helm.sh/chart: puppetserver-11.0.0
+            helm.sh/chart: puppetserver-11.0.1
         spec:
           containers:
             - env:
@@ -94,6 +94,7 @@ manifest should match snapshot:
                     - FOWNER
                   drop:
                     - all
+                runAsGroup: 0
               startupProbe:
                 failureThreshold: 30
                 periodSeconds: 15
